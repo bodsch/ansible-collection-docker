@@ -1,0 +1,22 @@
+---
+
+- name: description for registry login
+  ansible.builtin.debug:
+    msg: "{{ registry.description if registry.description is defined else 'login as ' + registry.username }}"
+
+- name: log into private registry and force re-authorization
+  community.general.docker_login:
+    state: present
+    registry: "{{ registry.host | default(omit) }}"
+    username: "{{ registry.username }}"
+    password: "{{ registry.password }}"
+    reauthorize: "{{ registry.reauthorize | default('false') | bool }}"
+    debug: "{{ registry.debug | default('false') | bool }}"
+    tls: "{{ registry.tls | default('false') | bool }}"
+    ca_cert: "{{ registry.ca_cert | default(omit) }}"
+    client_cert: "{{ registry.client_cert | default(omit) }}"
+    client_key: "{{ registry.client_key | default(omit) }}"
+    validate_certs: "{{ registry.validate_certs | default('false') | bool }}"
+  register: registry_login
+  tags:
+    - container_registry_login

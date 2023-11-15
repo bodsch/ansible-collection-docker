@@ -1,0 +1,25 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+OPTIONS="serve /etc/docker/registry/config.yml"
+
+{#
+# registry --help
+`registry`
+
+Usage:
+  registry [flags]
+  registry [command]
+
+Available Commands:
+  serve           `serve` stores and distributes Docker images
+  garbage-collect `garbage-collect` deletes layers not referenced by any manifests
+  help            Help about any command
+
+Flags:
+  -h, --help=false: help for registry
+  -v, --version=false: show the version and exit
+
+
+Use "registry help [command]" for more information about a command.
+#}

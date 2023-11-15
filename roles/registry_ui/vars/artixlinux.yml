@@ -1,0 +1,6 @@
+---
+
+registry_ui_requirements:
+  - iproute
+
+...

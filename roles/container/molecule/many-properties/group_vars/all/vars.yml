@@ -1,0 +1,62 @@
+---
+
+container_fail:
+  error_at_launch: false
+
+_container_defaults: &CONTAINER_DEFAULTS
+  restart_policy: always
+  # labels:
+  #   watchdog: "false"
+  # log_options:
+  #   labels: "service"
+  #   max-size: "1m"
+  #   max-file: "2"
+
+_images:
+  image_1: "busybox:latest"
+  image_2: "busybox:latest"
+  image_3: "hello-world:latest"
+  image_4: "busybox:latest"
+  image_5: "busybox:latest"
+
+container: "{{
+  container_1 |
+  union(container_2 | default([])) |
+  union(container_3 | default([])) |
+  union(container_4 | default([])) |
+  union(container_5 | default([])) }}"
+
+container_1:
+  - name: busybox-1
+    hostname: busybox-1
+    image: "{{ _images.image_1 }}"
+    property_files:
+      - name: publisher.properties
+        properties:
+          replicator.user: 'replicator'
+          replicator.password: 'replicator'
+          replicator.domain: 'localhost'
+          replicator.tmp_dir: 'var/tmp'
+      - name: database.properties
+    properties:
+      publisher.maxRecursionDepth: 200
+      replicator.tmp_dir: 'var/tmp'
+    environments:
+      VIRTUAL_HOST: busybox-1.local
+      TEST_WORF: true
+      DBA_HOST: database
+      DBA_USER: username
+
+container_3:
+  - name: hello-world-1
+    <<: *CONTAINER_DEFAULTS
+    # state: stopped
+    hostname: hello-world-1
+    image: "{{ _images.image_3 }}"
+    properties:
+      publisher.enabled: false
+      replicator.tmp_dir: '/tmp/hello-world-1'
+    environments:
+      VIRTUAL_HOST: hello-world-1.local
+
+...

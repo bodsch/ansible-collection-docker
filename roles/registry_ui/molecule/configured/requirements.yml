@@ -1,0 +1,15 @@
+---
+
+- name: snakeoil
+  src: bodsch.snakeoil
+
+- name: syslog-ng
+  src: bodsch.syslog_ng
+
+- name: nginx
+  src: bodsch.nginx
+
+- name: redis
+  src: bodsch.redis
+
+...

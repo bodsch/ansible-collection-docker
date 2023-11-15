@@ -1,0 +1,225 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+---
+# {{ ansible_managed }}
+version: 0.1
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#log #}
+{%- if registry_log is defined and
+      registry_log | count > 0 %}
+log:
+  {% if registry_log.accesslog is defined and
+        registry_log.accesslog | count > 0 %}
+  accesslog:
+    {% if registry_log.accesslog.disabled is defined %}
+    disabled: {{ registry_log.accesslog.disabled | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+    {% endif %}
+  {% endif %}
+  {% if registry_log.level is defined and
+        registry_log.level | string | length > 0 %}
+    {% set _log_level = "info" %}
+    {% if registry_log.level in ["error", "warn", "info", "debug"] %}
+      {% set _log_level = registry_log.level %}
+    {% endif %}
+  level: {{ _log_level }}
+  {% endif %}
+  {% if registry_log.formatter is defined and
+        registry_log.formatter | string | length > 0 %}
+    {% set _log_formatter = "text" %}
+    {% if registry_log.formatter in ["text", "json", "logstash"] %}
+      {% set _log_formatter = registry_log.formatter %}
+    {% endif %}
+  formatter: {{ _log_formatter }}
+  {% endif %}
+  {% if registry_log.fields is defined and
+        registry_log.fields | count > 0 %}
+  fields:
+    {% for k, v in registry_log.fields.items() %}
+    {{ k }}: {{ v }}
+    {% endfor %}
+  {% endif %}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage #}
+{%- if registry_storage is defined and
+      registry_storage | count > 0 %}
+storage:
+  {% if registry_storage.filesystem is defined and
+        registry_storage.filesystem | count > 0 %}
+  filesystem:
+    {% if registry_storage.filesystem.rootdirectory is defined and
+          registry_storage.filesystem.rootdirectory | string | length > 0 %}
+    rootdirectory: {{ registry_storage.filesystem.rootdirectory }}
+    {% endif %}
+  {% endif %}
+  {% if registry_storage.delete is defined and
+        registry_storage.delete.enabled is defined and
+        registry_storage.delete.enabled %}
+  delete:
+    enabled: true
+  {% endif %}
+  {% if registry_storage.cache is defined and
+        registry_storage.cache | count > 0 %}
+  cache:
+    {% if registry_storage.cache.blobdescriptor is defined and
+          registry_storage.cache.blobdescriptor | string | length > 0 %}
+      {% set _cache_blobdescriptor = "inmemory" %}
+      {% if registry_storage.cache.blobdescriptor in ["redis", "inmemory"] %}
+        {% set _cache_blobdescriptor = registry_storage.cache.blobdescriptor %}
+      {% endif %}
+    blobdescriptor: {{ _cache_blobdescriptor }}
+    {% endif %}
+    {% if registry_storage.cache.blobdescriptorsize is defined and
+          registry_storage.cache.blobdescriptorsize | string | length > 0 %}
+    blobdescriptorsize: {{ registry_storage.cache.blobdescriptorsize }}
+    {% endif %}
+  {% endif %}
+  {% if registry_storage.maintenance is defined and
+        registry_storage.maintenance | count > 0 %}
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 24h
+      dryrun: false
+    readonly:
+      enabled: false
+  {% endif %}
+  {% if registry_storage.redirect is defined and
+        registry_storage.redirect.disable is defined %}
+  redirect:
+    disable: {{ registry_storage.redirect.disable | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#auth #}
+{%- if registry_auth is defined and
+      registry_auth | count > 0 %}
+auth:
+  {% if registry_auth.htpasswd is defined and
+        registry_auth.htpasswd | count > 0 %}
+  htpasswd:
+    {% if registry_auth.htpasswd.realm is defined and
+          registry_auth.htpasswd.realm | string | length > 0 %}
+    realm: {{ registry_auth.htpasswd.realm }}
+    {% endif %}
+    {% if registry_auth.htpasswd.path is defined and
+          registry_auth.htpasswd.path | string | length > 0 %}
+    path: {{ registry_auth.htpasswd.path  }}
+    {% endif %}
+  {% endif %}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#middleware #}
+{%- if registry_middleware is defined and registry_middleware | count > 0 %}
+middleware:
+  {{ registry_middleware | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#reporting #}
+{%- if registry_reporting is defined and registry_reporting | count > 0 %}
+reporting:
+  {{ registry_reporting | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#http #}
+{% if registry_http is defined and registry_http | count > 0 %}
+http:
+  {{ registry_http | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif %}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#notifications #}
+{% if registry_notifications is defined %}
+notifications:
+  {# registry_notifications | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) #}
+  {% if registry_notifications.events is defined and
+        registry_notifications.events.includereferences is defined and
+        registry_notifications.events.includereferences | string | length > 0 %}
+  events:
+    includereferences: {{ registry_notifications.events.includereferences | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+  {% if registry_notifications.endpoints is defined and
+        registry_notifications.endpoints | count > 0 %}
+  endpoints:
+    {% for e in registry_notifications.endpoints %}
+    - name: {{ e.name }}
+      {% if e.disabled is defined %}
+      disabled: {{ e.disabled | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+      {% endif %}
+      {% if e.url is defined and e.url | string | length > 0 %}
+      url: {{ e.url }}
+      {% endif %}
+      {% if e.headers is defined and e.headers | count > 0 %}
+      headers:
+        {% for k, v in e.headers.items() %}
+        {{ k }}:
+          {% for xx in v %}
+          - {{ xx }}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+      {% if e.timeout is defined and e.timeout | string | length > 0 %}
+      timeout: {{ e.timeout }}
+      {% endif %}
+      {% if e.threshold is defined and e.threshold | string | length > 0 %}
+      threshold: {{ e.threshold }}
+      {% endif %}
+      {% if e.backoff is defined and e.backoff | string | length > 0 %}
+      backoff: {{ e.backoff }}
+      {% endif %}
+      {% if e.ignoredmediatypes is defined and e.ignoredmediatypes | count > 0 %}
+      ignoredmediatypes:
+        {% for i in e.ignoredmediatypes %}
+        - {{ i }}
+        {% endfor %}
+      {% endif %}
+      {% if e.ignore is defined and e.ignore | count > 0 %}
+      ignore:
+        {% if e.ignore.mediatypes is defined and e.ignore.mediatypes | count > 0 %}
+        mediatypes:
+          {% for i in e.ignore.mediatypes %}
+          - {{ i }}
+          {% endfor %}
+        {% endif %}
+        {% if e.ignore.actions is defined and e.ignore.actions | count > 0 %}
+        actions:
+          {% for i in e.ignore.actions %}
+          - {{ i }}
+          {% endfor %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#redis #}
+{%- if registry_redis is defined and registry_redis | count > 0 %}
+redis:
+  {{ registry_redis | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif %}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#health #}
+{%- if registry_health is defined and registry_health | count > 0 %}
+health:
+  {{ registry_health | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#proxy #}
+{%- if registry_proxy is defined and
+      registry_proxy | count > 0 %}
+proxy:
+  {{ registry_proxy | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#compatibility #}
+{%- if registry_compatibility is defined and
+      registry_compatibility | count > 0 %}
+compatibility:
+  {{ registry_compatibility | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif -%}
+
+{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#validation #}
+{%- if registry_validation is defined and
+      registry_validation | count > 0 %}
+validation:
+  {{ registry_validation | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
+{% endif -%}

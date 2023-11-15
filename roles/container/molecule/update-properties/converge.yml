@@ -1,0 +1,11 @@
+---
+
+- name: update
+  hosts: instance
+  any_errors_fatal: true
+  gather_facts: true
+
+  roles:
+    - role: bodsch.docker.container
+
+...

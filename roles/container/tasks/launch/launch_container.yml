@@ -1,0 +1,113 @@
+---
+
+- name: "launching container"
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    hostname: "{{ item.hostname | default(item.name) }}"
+    image: "{{ item.image }}"
+    auto_remove: "{{ item.auto_remove | default(omit) }}"
+    blkio_weight: "{{ item.blkio_weight | default(omit) }}"
+    cap_drop: "{{ item.cap_drop | default(omit) }}"
+    capabilities: "{{ item.capabilities | default(omit) }}"
+    cgroup_parent: "{{ item.cgroup_parent | default(omit) }}"
+    command: "{{ item.command | default(omit) }}"
+    command_handling: "{{ item.command_handling | default(omit) }}"
+    comparisons: "{{ container_comparisons }}"
+    container_default_behavior: "{{ item.container_default_behavior | default(container_default_behavior) }}"
+    cpu_period: "{{ item.cpu_period | default(omit) }}"
+    cpu_quota: "{{ item.cpu_quota | default(omit) }}"
+    cpu_shares: "{{ item.cpu_shares | default(omit) }}"
+    cpus: "{{ item.cpus | default(omit) }}"
+    cpuset_cpus: "{{ item.cpuset_cpus | default(omit) | string }}"
+    cpuset_mems: "{{ item.cpuset_mems | default(omit) | string }}"
+    debug: "{{ item.debug | default(False) | bool }}"
+    default_host_ip: "{{ item.debug | default(omit) | string }}"
+    device_read_bps: "{{ item.device_read_bps | default(omit) }}"
+    device_read_iops: "{{ item.device_read_iops | default(omit) }}"
+    device_requests: "{{ item.device_requests | default(omit) }}"
+    device_write_bps: "{{ item.device_write_bps | default(omit) }}"
+    device_write_iops: "{{ item.device_write_iops | default(omit) }}"
+    devices: "{{ item.devices | default(omit) }}"
+    dns_opts: "{{ item.dns_opts | default(omit) }}"
+    dns_search_domains: "{{ item.dns_search_domains | default(omit) }}"
+    dns_servers: "{{ item.dns_servers | default(omit) }}"
+    docker_host: "{{ item.docker_host | default(omit) }}"
+    domainname: "{{ item.domainname | default(omit) }}"
+    entrypoint: "{{ item.entrypoint | default(omit) }}"
+    env: "{{ item.env | default(omit) }}"
+    env_file: "{{ container_env_directory }}/{{ item.name }}/container.env"
+    etc_hosts: "{{ item.etc_hosts | default(omit) }}"
+    exposed_ports: "{{ item.exposed_ports | default(omit) }}"
+    force_kill: "{{ item.force_kill | default(omit) }}"
+    groups: "{{ item.groups | default(omit) }}"
+    healthcheck: "{{ item.healthcheck | default(omit) }}"
+    kernel_memory: "{{ item.kernel_memory | default(omit) }}"
+    labels: "{{ item.labels | default({}) }}"
+    links: "{{ item.links | default(omit) }}"
+    log_driver: "{{ item.log_driver | default('json-file') }}"
+    log_options: "{{ item.log_options | default({}) }}"
+    memory: "{{ item.memory | default(omit) }}"
+    memory_reservation: "{{ item.memory_reservation | default(omit) }}"
+    memory_swap: "{{ item.memory_swap | default(omit) }}"
+    memory_swappiness: "{{ item.memory_swappiness | default(omit) }}"
+    mounts: "{{ item.mounts | default([]) | remove_source_handling }}"
+    network_mode: "{{ item.network_mode | default('bridge') }}"
+    networks: "{{ item.networks | default(omit) }}"
+    networks_cli_compatible: "{{ item.networks_cli_compatible | default(omit) }}"
+    oom_killer: "{{ item.oom_killer | default(omit) }}"
+    oom_score_adj: "{{ item.oom_score_adj | default(omit) }}"
+    output_logs: "{{ item.output_logs | default(omit) }}"  # Only effective when log_driver is set to json-file, journald, or local.
+    privileged: "{{ item.privileged | default(omit) }}"
+    publish_all_ports: "{{ item.publish_all_ports | default(omit) }}"
+    published_ports: "{{ item.published_ports | default(omit) }}"
+    read_only: "{{ item.read_only | default(omit) }}"
+    recreate: "{{ item.recreate | default(omit) }}"  # <==  RESTARTS container after EVERY ansible run
+    restart: "{{ item.restart | default(omit) }}"
+    restart_policy: "{{ item.restart_policy | default('on-failure') }}"
+    restart_retries: "{{ item.restart_retries | default(omit) }}"
+    security_opts: "{{ item.security_opts | default(omit) }}"
+    shm_size: "{{ item.shm_size | default(omit) }}"
+    state: "{{ item.state | default('started') }}"
+    storage_opts: "{{ item.storage_opts | default(omit) }}"
+    sysctls: "{{ item.sysctls | default(omit) }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    tmpfs: "{{ item.tmpfs | default(omit) }}"
+    ulimits: "{{ item.ulimits | default(omit) }}"
+    user: "{{ item.user | default(omit) }}"
+    volumes: "{{ item.volumes | default([]) | remove_custom_fields }}"
+    volumes_from: "{{ item.volumes_from | default([]) }}"
+    working_dir: "{{ item.working_dir | default(omit) }}"
+  register: create_container_instances
+  ignore_errors: true
+  loop: "{{ container_to_launch }}"
+  loop_control:
+    label: "{{ item.name.ljust(12) }} - hostname: {{ item.name }} - image: {{ item.image }}"
+  tags:
+    - container_launch
+
+- name: define container states
+  ansible.builtin.set_fact:
+    changed: "{{ create_container_instances | reporting('changed') }}"
+    failed: "{{ create_container_instances | reporting('failed') }}"
+
+- name: reporting changes
+  ansible.builtin.debug:
+    msg: "{{ changed }}"
+  when:
+    - container_reporting.changes
+
+- name: reporting failed
+  ansible.builtin.debug:
+    msg: "{{ failed }}"
+  when:
+    - container_reporting.failed
+    - not container_fail.error_at_launch | default('true')
+
+- name: Exit if the start of a container has failed
+  ansible.builtin.fail:
+    msg: "{{ failed }}"
+  when:
+    - failed | default([]) | count > 0
+    - container_fail.error_at_launch | default('true')
+
+...

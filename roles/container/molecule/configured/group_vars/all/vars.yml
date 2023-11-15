@@ -1,0 +1,91 @@
+---
+
+container_registry: []
+  # - username: 'bar1'
+  # - username: 'bodsch'
+  #   password: 'XXX'
+  #   description: login into dockerhub
+  # - username: 'foo'
+  #   password: 'bar'
+  #   description: login into my private registry
+  #   host: 'hubby'
+  # - username: 'foo2'
+  #   password: 'bar2'
+
+container_network:
+  - name: test
+    subnet: 172.3.27.0/24
+    gateway: 172.3.27.2
+    iprange: 172.3.27.0/26
+
+  - name: monitoring
+    state: absent
+    enable_ipv6: false
+    subnet: 172.9.27.0/24
+    gateway: 172.9.27.2
+    iprange: 172.9.27.0/26
+
+container_fail:
+  error_at_launch: false
+
+container_pre_tasks:
+  - /usr/local/bin/list_all_images.sh
+
+container_post_tasks:
+  - /usr/local/bin/remove_untagged_images.sh
+  - /usr/local/bin/parse_container_fact.sh
+
+container:
+  - name: hello-world
+    hostname: hello-world
+    image: hello-world:latest
+    volumes:
+      - /run/docker.sock:/tmp/docker.sock:ro
+      - /tmp/nginx:/tmp/nginx:ro
+      - /dev/foo:/dev/foo:ro
+      - /tmp/testing3:/var/tmp/testing3:rw|{owner="999",group="1000"}
+      - /tmp/testing4:/var/tmp/testing4|{owner="1001",mode="0700"}
+      - /tmp/testing5:/var/tmp/testing5|{owner="1001",mode="0700",ignore=True}
+      - /tmp/testing6:/var/tmp/testing6:ro|{owner="999",group="1000"}
+    mounts:
+      - source: /tmp/testing1
+        target: /var/tmp/testing1
+        type: bind
+        source_handling:
+          create: true
+          owner: "1000"
+          group: "1000"
+          mode: "0750"
+      - source: /tmp/testing2
+        target: /var/tmp/testing2
+        type: bind
+        source_handling:
+          create: true
+          owner: "800"
+          group: "999"
+          mode: "0700"
+      - source: /opt/registry
+        target: /opt/data
+        type: bind
+        source_handling:
+          create: true
+          owner: "1000"
+          group: "1000"
+          mode: "0750"
+      - source: "{{ container_env_directory }}/registry/config.yml"
+        target: /etc/docker/registry/config.yml
+        type: bind
+        read_only: true
+        source_handling:
+          create: false
+    properties:
+      publisher.maxRecursionDepth: 600
+      # user and password for login to the staging serve
+      replicator.user: 'replicator'
+      replicator.password: 'replicator'
+      # replicator.domain: ''
+      replicator.tmp_dir: 'var/tmp'
+    environments:
+      VIRTUAL_HOST: hello-world.local
+
+...

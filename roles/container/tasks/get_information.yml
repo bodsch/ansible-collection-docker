@@ -1,0 +1,27 @@
+---
+
+- name: "get container informations from host '{{ ansible_play_hosts[0] }}'"
+  community.docker.docker_container_info:
+    name: "{{ item.name }}"
+  register: container_info
+  no_log: true
+  with_items: "{{ container }}"
+
+- name: informations
+  when:
+    - container_info.results is defined
+  block:
+    - name: set local docker data
+      ansible.builtin.set_fact:
+        _local_container_data: "{{ container_info | container_hashes }}"
+
+    - name: set diffed container informations
+      ansible.builtin.set_fact:
+        _diffed_container_data: "{{ _local_container_data | compare_dict(_pulled_container_data) }}"
+
+- name: debug
+  ansible.builtin.debug:
+    msg: "{{ item }}"
+  when: item is defined
+  loop:
+    - "{{ _diffed_container_data }}"

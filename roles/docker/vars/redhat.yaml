@@ -1,0 +1,13 @@
+---
+
+docker_dependencies:
+  - iproute
+  - iptables
+  # - iptables-ebtables
+  - python3-docker
+  - python3-requests
+  - python3-urllib3
+
+docker_defaults_python_packages: []
+
+...

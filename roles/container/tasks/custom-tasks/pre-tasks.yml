@@ -1,0 +1,22 @@
+---
+
+- name: execute pre tasks
+  ansible.builtin.command: |
+    {{ item }}
+  changed_when: false
+  register: _pre_task_output
+  loop: "{{ container_pre_tasks }}"
+  tags:
+    - container_exec_pre_tasks
+
+- name: result
+  ansible.builtin.debug:
+    msg:
+      - "{{ item.stdout }}"
+  loop: "{{ _pre_task_output.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  tags:
+    - container_exec_pre_tasks
+
+...

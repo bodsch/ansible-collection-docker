@@ -1,0 +1,5 @@
+---
+
+collections:
+  - name: bodsch.core
+  - name: bodsch.scm

@@ -1,0 +1,39 @@
+---
+
+python_virtualenv_path: "${HOME}/.venv"
+
+container_packages: []
+
+container_python_extra_args: []
+container_python_packages:
+  - name: ruamel.yaml
+    version: 0.17
+  - name: jinja2
+    version: 3.0.3
+
+container_update_needed: false
+
+container_registry_default:
+  - username: ''
+    password: ''
+    host:
+    reauthorize:
+    debug:
+    tls:
+    ca_cert:
+    client_cert:
+    client_key:
+    validate_certs:
+
+_container_images_information_pulled: {}
+
+container_changed: []
+
+container_names: []
+container_to_launch: []
+container_mounts: []
+container_volumes: []
+container_environnments: []
+container_images_needed: []
+
+...

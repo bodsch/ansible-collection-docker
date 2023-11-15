@@ -1,0 +1,27 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% set _log_level = "info" %}
+{% if registry_ui_service.log_level is defined and
+      registry_ui_service.log_level | string | length > 0 and
+      registry_ui_service.log_level in ["error", "warn", "info", "debug" ] %}
+  {% set _log_level = registry_ui_service.log_level %}
+{% endif %}
+
+OPTIONS="
+  -config-file {{ registry_ui_config_dir }}/config.yml \
+  -log-level {{ _log_level }}"
+
+{#
+# registry-ui --help
+Usage of registry-ui:
+  -config-file string
+        path to the config file (default "config.yml")
+  -dry-run
+        dry-run for purging task, does not delete anything
+  -log-level string
+        logging level (default "info")
+  -purge-tags
+        purge old tags instead of running a web server
+
+#}

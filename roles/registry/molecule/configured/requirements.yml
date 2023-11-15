@@ -1,0 +1,6 @@
+---
+
+- name: redis
+  src: bodsch.redis
+
+...

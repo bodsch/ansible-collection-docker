@@ -1,0 +1,14 @@
+---
+
+registry_ui_service:
+  log_level: info
+
+registry_ui_listen:
+  address: 0.0.0.0
+  port: 8080
+
+registry_ui_registry:
+  url: http://127.0.0.1:5000
+  verify_tls: false
+
+...

@@ -1,0 +1,159 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if registry_ui_listen is defined and
+      registry_ui_listen | count > 0 %}
+# Listen interface.
+listen_addr: {{ registry_ui_listen.address | default('127.0.0.1') }}:{{ registry_ui_listen.port | default('8000') }}
+{% endif %}
+
+{% if registry_ui_base_path is defined and
+      registry_ui_base_path | string | length > 0 %}
+# Base path of Docker Registry UI.
+base_path: {{ registry_ui_base_path }}
+{% endif %}
+
+{% if registry_ui_registry is defined and
+      registry_ui_registry | count > 0 %}
+  {% if registry_ui_registry.url is defined and
+        registry_ui_registry.url | string | length > 0 %}
+# Registry URL with schema and port.
+registry_url: {{ registry_ui_registry.url }}
+  {% endif %}
+  {% if registry_ui_registry.verify_tls is defined and
+        registry_ui_registry.verify_tls %}
+# Verify TLS certificate when using https.
+verify_tls: {{ registry_ui_registry.verify_tls | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+# Docker registry credentials.
+# They need to have a full access to the registry.
+# If token authentication service is enabled, it will be auto-discovered and those credentials
+# will be used to obtain access tokens.
+# When the registry_password_file entry is used, the password can be passed as a docker secret
+# and read from file. This overides the registry_password entry.
+  {% if registry_ui_registry.username is defined and
+        registry_ui_registry.username | string | length > 0 %}
+registry_username: {{ registry_ui_registry.username }}
+  {% endif %}
+  {% if registry_ui_registry.password is defined and
+        registry_ui_registry.password | string | length > 0 %}
+registry_password: {{ registry_ui_registry.password }}
+  {% endif %}
+  {% if registry_ui_registry.password_file is defined and
+        registry_ui_registry.password_file | string | length > 0 %}
+registry_password_file: {{ registry_ui_registry.password_file }}
+  {% endif %}
+{% endif %}
+
+{% if registry_ui_event is defined and
+      registry_ui_event | count > 0 %}
+# Event listener token.
+# The same one should be configured on Docker registry as Authorization Bearer token.
+  {% if registry_ui_event.token is defined and
+        registry_ui_event.token | string | length > 0 %}
+event_listener_token: {{ registry_ui_event.token }}
+  {% endif %}
+  {% if registry_ui_event.retention_days is defined and
+        registry_ui_event.retention_days | string | length > 0 %}
+# Retention of records to keep.
+event_retention_days: {{ registry_ui_event.retention_days }}
+  {% endif %}
+
+  {% if registry_ui_event.database is defined and
+        registry_ui_event.database | count > 0 and
+        registry_ui_event.database.driver is defined and
+        registry_ui_event.database.driver | string | length > 0 %}
+    {% if registry_ui_event.database.driver in ["sqlite3", "mysql"] %}
+      {% if registry_ui_event.database.driver == "sqlite3" %}
+# Event listener storage.
+event_database_driver: sqlite3
+        {% set _database_location = registry_ui_data_dir ~ "/registry_events.db" %}
+        {% if registry_ui_event.database.location is defined and
+              registry_ui_event.database.location | string | length > 0 %}
+          {% set _database_location = registry_ui_event.database.location %}
+        {% endif %}
+event_database_location: {{ _database_location }}
+      {% endif %}
+      {% if registry_ui_event.database.driver == "mysql" %}
+event_database_driver: mysql
+        {% if registry_ui_event.database.username is defined and
+              registry_ui_event.database.username | string | length > 0 and
+              registry_ui_event.database.password is defined and
+              registry_ui_event.database.password | string | length > 0 %}
+                        # user:password@tcp(localhost:3306)/docker_events
+event_database_location: {{ registry_ui_event.database.username }}:{{ registry_ui_event.database.password }}@tcp({{ registry_ui_event.database.hostname | default('127.0.0.1:3306') }})/{{ registry_ui_event.database.schemaname }}
+        {% endif %}
+      {% endif%}
+    {% endif %}
+  {% endif %}
+
+# You can disable event deletion on some hosts when you are running docker-registry on master-master or
+# cluster setup to avoid deadlocks or replication break.
+event_deletion_enabled:  {{ registry_ui_event.deletion_enabled | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+
+# If all users can view the event log. If set to false, then only admins listed below.
+anyone_can_view_events: {{ registry_ui_event.anyone_can_view | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+{% endif %}
+
+{% if registry_ui_cache is defined and
+      registry_ui_cache | count > 0 %}
+  {% if registry_ui_cache.refresh_interval is defined and
+        registry_ui_cache.refresh_interval | string | length > 0 %}
+# Cache refresh interval in minutes.
+# How long to cache repository list and tag counts.
+cache_refresh_interval: {{ registry_ui_cache.refresh_interval }}
+  {% endif %}
+{% endif %}
+
+{% if registry_ui_delete is defined and
+      registry_ui_delete | count > 0 %}
+  {% if registry_ui_delete.anyone_can_delete is defined and
+        registry_ui_delete.anyone_can_delete %}
+# If all users can delete tags. If set to false, then only admins listed below.
+anyone_can_delete: {{ registry_ui_delete.anyone_can_delete | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+  {% if registry_ui_delete.admins is defined and
+        registry_ui_delete.admins %}
+# Users allowed to delete tags.
+# This should be sent via X-WEBAUTH-USER header from your proxy.
+admins: [" {{ registry_ui_delete.admins | join(",") }}"]
+  {% endif %}
+{% endif %}
+
+# Debug mode. Affects only templates.
+debug: {{ registry_ui_debug | default('false') | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+
+{% if registry_ui_purge is defined and
+      registry_ui_purge | count > 0 %}
+  {% if registry_ui_purge.tags_keep_days is defined and
+        registry_ui_purge.tags_keep_days | string | length > 0 %}
+# How many days to keep tags but also keep the minimal count provided no matter how old.
+purge_tags_keep_days: {{ registry_ui_purge.tags_keep_days }}
+  {% endif %}
+  {% if registry_ui_purge.tags_keep_count is defined and
+        registry_ui_purge.tags_keep_count | string | length > 0 %}
+purge_tags_keep_count: {{ registry_ui_purge.tags_keep_count }}
+  {% endif %}
+  {% if registry_ui_purge.tags_keep_regexp is defined and
+        registry_ui_purge.tags_keep_regexp | string | length > 0 %}
+# Keep tags matching regexp no matter how old, e.g. '^latest$'
+# Empty string disables this feature.
+purge_tags_keep_regexp: {{ registry_ui_purge.tags_keep_regexp }}
+  {% endif %}
+
+  {% if registry_ui_purge.tags_keep_from_file is defined and
+        registry_ui_purge.tags_keep_from_file | string | length > 0 %}
+# Keep tags listed in the file no matter how old.
+# File format is JSON: {"repo1": ["tag1", "tag2"], "repoX": ["tagX"]}
+# Empty string disables this feature.
+purge_tags_keep_from_file: {{ registry_ui_purge.tags_keep_from_file }}
+  {%endif %}
+  {% if registry_ui_purge.tags_schedule is defined and
+        registry_ui_purge.tags_schedule | string | length > 0 %}
+# Enable built-in cron to schedule purging tags in server mode.
+# Empty string disables this feature.
+# Example: '25 54 17 * * *' will run it at 17:54:25 daily.
+# Note, the cron schedule format includes seconds! See https://godoc.org/github.com/robfig/cron
+purge_tags_schedule: "{{ registry_ui_purge.tags_schedule }}"
+  {% endif %}
+{% endif %}

@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+#
+{% set caefeeder = (container | selectattr('name', 'search', 'caefeeder') | first ) | default({}) %}
+{% set env = caefeeder.environments | default({}) %}
+# {{ caefeeder.name }}
+{# # {{ caefeeder | to_nice_json(indent=2) }} #}
+
+jdbc.driver={{ env.JDBC_DRIVER | default('com.mysql.cj.jdbc.Driver') }}
+jdbc.url={{ env.JDBC_URL | default('jdbc:mysql://<host>:3306/cm_mcaefeeder') }}
+jdbc.user={{ env.JDBC_USER | default('cm_mcaefeeder') }}
+jdbc.password={{ env.JDBC_PASSWORD | default('cm_mcaefeeder') }}

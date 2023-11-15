@@ -1,0 +1,29 @@
+---
+
+name: push to ansible galaxy
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+
+jobs:
+  galaxy:
+    name: galaxy
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v3
+
+      - name: Deploy Ansible Galaxy Collection
+        uses: artis3n/ansible_galaxy_collection@v2.8.3
+        with:
+          api_key: '${{ secrets.GALAXY_API_KEY }}'

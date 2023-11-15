@@ -1,0 +1,53 @@
+---
+
+- name: checksum
+  become: false
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: get checksum list
+      bodsch.scm.github_checksum:
+        project: bodsch
+        repository: docker-registry-ui
+        checksum_file: "{{ registry_ui_archive }}.sha256"
+        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        architecture: "{{ ansible_architecture }}"
+        system: "{{ ansible_facts.system }}"
+        version: "{{ registry_ui_version }}"
+      register: _latest_checksum
+
+    - name: define checksum for {{ go_arch }} architecture
+      ansible.builtin.set_fact:
+        __registry_ui_checksum: "{{ _latest_checksum.checksum }}"
+      when:
+        - _latest_checksum.rc == 0
+        - _latest_checksum.checksum is defined
+        - _latest_checksum.checksum | string | length > 0
+
+- name: download registry-ui binary archive
+  become: false
+  delegate_to: "{{ registry_ui_delegate_to }}"
+  run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+  ansible.builtin.get_url:
+    url: "{{ registry_ui_release_download_url }}/download/{{ registry_ui_version }}/registry-ui-{{ registry_ui_version }}-{{ ansible_facts.system }}-{{ system_architecture }}.tar.gz"
+    dest: "{{ registry_ui_local_tmp_directory }}/registry-ui-{{ system_architecture }}.tar.gz"
+    checksum: "sha256:{{ __registry_ui_checksum }}"
+    mode: 0660
+  register: _download_archive
+  until: _download_archive is succeeded
+  retries: 5
+  delay: 2
+  check_mode: false
+
+- name: extract registry-ui archive
+  become: false
+  delegate_to: "{{ registry_ui_delegate_to }}"
+  run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ registry_ui_local_tmp_directory }}/registry-ui-{{ system_architecture }}.tar.gz"
+    dest: "{{ registry_ui_local_tmp_directory }}"
+    copy: false
+  register: _extract_archive
+
+...

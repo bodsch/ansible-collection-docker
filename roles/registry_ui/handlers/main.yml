@@ -1,0 +1,26 @@
+---
+
+- name: restart registry-ui
+  become: true
+  ansible.builtin.service:
+    name: registry-ui
+    state: restarted
+
+- name: reload registry-ui
+  become: true
+  ansible.builtin.service:
+    name: registry-ui
+    state: reloaded
+
+- name: validate config
+  ansible.builtin.command: /bin/true
+
+- name: daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    force: true
+  when:
+    - ansible_service_mgr | lower == "systemd"
+
+...

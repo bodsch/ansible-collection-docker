@@ -1,0 +1,132 @@
+---
+
+## choose centos docker repo channel enable status
+docker_repo:
+  channel:
+    stable_enabled: true
+    test_enabled: false
+    nightly_enabled: false
+
+## state of package (present, absent, etc.)
+docker_state: present
+
+## should docker daemon start on boot?
+docker_service:
+  enable: true
+  ## name of docker service
+  name: docker
+
+## install docker-compose in version
+docker_compose: {}
+# as example:
+# docker_compose:
+#   install: true
+#   version: 1.29.2
+
+docker_users: []
+
+docker_plugins: []
+# as example:
+# docker_plugins:
+#   - alias: loki
+#     source: grafana/loki-docker-driver:latest
+#     state: present
+
+# Proxy related ----------------------------------------------------------------
+
+## should docker daemon use a proxy for outbound connections?
+docker_proxy:
+  enabled: false
+  ## list of env variables we should set (comment out the ones you don't need)
+  env:
+    - "HTTP_PROXY=http://proxy.example.com:80/"
+    - "HTTP_PROXY=https://proxy.example.com:443/"
+    - "NO_PROXY=localhost,127.0.0.1,internalhub.example.com"
+
+# docker client configuration --------------------------------------------------
+
+## enable authentication for docker registry
+docker_client_config: []
+# as example:
+# docker_client_config:
+#   - username: jenkins
+#     enabled: true
+#     owner: jenkins
+#     group: jeinkins
+#     ## the location we should push client configuration
+#     location: "/var/jenkins_home/.docker/config.json"
+#     auths:
+#       "https://harbor.deployment.tld":
+#         auth: "amVua2luczpydWJiZWwtZGllLWthdHotZHUtZHVtbXNjaHfDpHR6ZXIxCg=="
+#         email: "jenkins@deployment.tld"
+#     formats:
+#       ps:
+#         - ".ID"
+#         - ".Names"
+#         - ".Status"
+#         - ".Labels"
+#         - ".RunningFor"
+#         - ".Ports"
+#       images:
+#         - ".ID"
+#         - ".Size"
+#         - ".Repository"
+#         - ".Tag"
+#         - ".CreatedAt"
+
+# default dockerd configuration options ----------------------------------------
+
+# for full doku, see: README.md
+docker_config:
+  authorization_plugins: []
+  bip: ""
+  bridge: ""
+  data_root: "/var/lib/docker"
+  debug: false
+  default_gateway: ""
+  default_gateway_v6: ""
+  default_shm_size: ""
+  default_ulimits: {}
+  dns: []
+  dns_opts: []
+  dns_search: []
+  experimental: false
+  fixed_cidr: ""
+  fixed_cidr_v6: ""
+  group: ""
+  hosts: []
+  insecure_registries: []
+  ip: ""
+  ip_forward:
+  ip_masq:
+  iptables:
+  ip6tables:
+  ipv6:
+  labels: []
+  log_driver: ""
+  log_level: ""
+  log_opts: {}
+  max_concurrent_downloads: 3
+  max_concurrent_uploads: 5
+  max_download_attempts:
+  metrics_addr: ""
+  oom_score_adjust:
+  pidfile:
+  raw_logs:
+  registry_mirrors: []
+  seccomp_profile: ""
+  selinux_enabled: false
+  shutdown_timeout:
+  storage_driver: ""
+  storage_opts: []
+  tls:
+    verify: false
+    ca_cert: ""
+    cert: ""
+    key: ""
+
+docker_config_diff: false
+
+docker_python_packages: []
+
+...

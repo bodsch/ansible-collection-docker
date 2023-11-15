@@ -1,0 +1,72 @@
+---
+
+registry_log:
+  level: info
+  formatter: json
+
+registry_storage:
+  filesystem:
+  #  rootdirectory: /opt/registry
+    maxthreads: 100
+  delete:
+    enabled: true
+#   redirect:
+#     disable: false
+  cache:
+    blobdescriptor: redis
+    blobdescriptorsize: 10000
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 10m
+      dryrun: false
+
+registry_http:
+  addr: localhost:5000
+  relativeurls: true
+  secret: ZRhgqhaAjdbuFXj2PLJTzYy5PrRsStNaeYWd9c3Ze3
+  debug:
+    addr: localhost:5001
+    prometheus:
+      enabled: true
+      path: /metrics
+
+registry_redis:
+  addr: localhost:6379
+  db: 0
+  dialtimeout: 10ms
+  readtimeout: 10ms
+  writetimeout: 10ms
+  pool:
+    maxidle: 16
+    maxactive: 64
+    idletimeout: 300s
+  tls:
+    enabled: false
+
+registry_notifications:
+  events:
+    includereferences: true
+  endpoints:
+    - name: registry_ui
+      disabled: false
+      url: http://127.0.0.1:8000/api/events
+      # headers: <http.Header>
+      headers:
+        Content-Type:
+          - application/json
+        Authorization:
+          - "Bearer 74RwH03rOPh8kTnIgcCqAWhgV3cGMAuz"
+      timeout: 1s
+      threshold: 10
+      backoff: 10s
+      ignoredmediatypes:
+        - application/octet-stream
+      ignore:
+        mediatypes:
+           - application/octet-stream
+        actions:
+           - pull
+
+...

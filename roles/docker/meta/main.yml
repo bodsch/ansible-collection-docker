@@ -1,0 +1,45 @@
+---
+
+galaxy_info:
+  role_name: docker
+
+  author: George Bolo / Bodo Schulz
+  description: install and configure docker on various linux systems
+
+  # Some suggested licenses:
+  # - BSD (default)
+  # - MIT
+  # - GPLv2
+  # - GPLv3
+  # - Apache
+  # - CC-BY
+  license: MIT
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: ArchLinux
+    - name: Debian
+      versions:
+        # 10
+        - buster
+        # 11
+        - bullseye
+        # 12
+        - bookworm
+    - name: Ubuntu
+      versions:
+        # 20.04 LTS (Focal Fossa)
+        - focal
+        # 22.04 LTS (Jammy Jellyfish)
+        - jammy
+        # 22.10 (Kinetic Kudu)
+        # - kinetic
+        # 23.04 (Lunar Lobster)
+        # - lunar
+
+  galaxy_tags:
+    - docker
+    - container
+    - microservices
+
+dependencies: []

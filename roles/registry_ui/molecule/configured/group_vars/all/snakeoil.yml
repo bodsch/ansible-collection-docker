@@ -1,0 +1,16 @@
+---
+
+snakeoil_extract_to: /etc/snakeoil
+
+# snakeoil_force: true
+
+snakeoil_domain: matrix.lan
+
+snakeoil_life_time: 30
+
+snakeoil_alt_names:
+  - dns:
+      - registry.matrix.lan
+      - molecule.matrix.lan
+
+...

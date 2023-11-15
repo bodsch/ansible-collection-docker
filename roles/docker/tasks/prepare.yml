@@ -1,0 +1,86 @@
+---
+
+- name: include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      paths:
+        - "vars"
+      files:
+        # eg. debian-10 / ubuntu-20.04 / centos-8 / oraclelinux-8
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yaml"
+        # eg. archlinux-systemd / archlinux-openrc
+        - "{{ ansible_distribution | lower }}-{{ ansible_service_mgr | lower }}.yaml"
+        # eg. debian / ubuntu / centos / oraclelinux
+        - "{{ ansible_distribution | lower }}.yaml"
+        # eg. redhat / debian
+        - "{{ ansible_os_family | lower }}.yaml"
+        # artixlinux
+        - "{{ ansible_os_family | lower | replace(' ', '') }}.yaml"
+        - default.yaml
+      skip: true
+
+- name: merge docker defaults between defaults and custom
+  ansible.builtin.set_fact:
+    docker_config: "{{ docker_defaults_config | combine(docker_config, recursive=True) }}"
+    docker_compose: "{{ docker_defaults_compose | combine(docker_compose, recursive=True) }}"
+    docker_python_packages: "{{ docker_python_packages | bodsch.core.union_by(docker_defaults_python_packages, union_by='name') }}"
+
+- name: validate log_driver in docker config
+  ansible.builtin.set_fact:
+    valid_docker_config: "{{ docker_config | bodsch.docker.validate_log_driver }}"
+
+- name: Fail if the log_driver is not properly defined
+  ansible.builtin.fail:
+    msg: "{{ valid_docker_config.msg }}"
+  when:
+    - valid_docker_config is defined
+    - not valid_docker_config.valid
+
+- name: install docker dependencies
+  ansible.builtin.package:
+    name: "{{ docker_dependencies }}"
+    state: present
+  when:
+    - docker_dependencies is defined
+    - docker_dependencies | count > 0
+
+- name: python support
+  when:
+    - docker_python_packages is defined
+    - docker_python_packages | count > 0
+  block:
+    - name: create pip requirements file
+      bodsch.core.pip_requirements:
+        name: docker
+        requirements: "{{ docker_python_packages }}"
+      register: pip_requirements
+
+    - name: fail if pip not installed
+      ansible.builtin.fail:
+        msg: python pip is not installed
+      when:
+        - not pip_requirements.pip.present
+
+    - name: install docker python packages  # noqa no-handler
+      ansible.builtin.pip:
+        state: present
+        requirements: "{{ pip_requirements.requirements_file }}"
+        extra_args: "{{ docker_python_extra_args | default([]) | bodsch.core.python_extra_args(python_version=ansible_python.version) | default(omit) }}"
+      when:
+        - pip_requirements.requirements_file is defined
+        - pip_requirements.changed
+
+    - name: do facts module to get latest information
+      ansible.builtin.setup:
+
+- name: detect installed docker_compose
+  ansible.builtin.stat:
+    path: "/usr/local/bin/docker-compose-{{ docker_compose.version }}"
+  register: stat_docker_compose_binary
+  when:
+    - docker_compose is defined
+    - docker_compose.install is defined
+    - docker_compose.install
+
+...

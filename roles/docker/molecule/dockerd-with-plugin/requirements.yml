@@ -1,0 +1,7 @@
+---
+
+- name: loki
+  src: https://github.com/bodsch/ansible-loki
+  version: 2.1.0
+
+...

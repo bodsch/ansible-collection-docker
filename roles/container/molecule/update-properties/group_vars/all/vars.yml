@@ -1,0 +1,33 @@
+---
+
+container_fail:
+  error_at_launch: false
+
+container:
+  - name: hello-world
+    hostname: hello-world
+    image: hello-world:latest
+    environments:
+      VIRTUAL_HOST: hello-world.local
+    properties:
+      #
+      publisher.maxRecursionDepth: 900
+      # user and password for login to the staging serve
+      replicator.user: 'replicator'
+      replicator.password: 'RSActgjk3shTcgosJzn4vT2.Z9i47QLV'
+      replicator.domain: 'localhost'
+      replicator.tmp_dir: 'var/tmp'
+    property_files:
+      - name: publisher.properties
+        properties:
+          replicator.user: 'replicator'
+          replicator.password: 'RSActgjk3shTcgosJzn4vT2.Z9i47QLV'
+          replicator.domain: 'localhost'
+          replicator.tmp_dir: 'var/tmp'
+      - name: database.properties
+
+container_post_tasks:
+  - /usr/local/bin/list_all_images.sh
+  - /usr/local/bin/remove_untagged_images.sh
+
+...

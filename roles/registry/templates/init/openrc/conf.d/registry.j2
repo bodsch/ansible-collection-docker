@@ -1,0 +1,9 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+# GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
+
+user="{{ registry_system_user }}"
+group="{{ registry_system_group }}"
+
+command_args="serve /etc/docker/registry/config.yml"

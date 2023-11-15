@@ -1,0 +1,27 @@
+---
+
+galaxy_info:
+  role_name: registry_ui
+
+  author: Bodo Schulz
+  description: ansible role to setup a Web UI for a docker registry
+  license: Apache
+  min_ansible_version: "2.10"
+
+  platforms:
+    - name: ArchLinux
+    - name: Debian
+      versions:
+        # 10
+        - buster
+        # 11
+        - bullseye
+
+  galaxy_tags:
+    - registry
+    - web
+    - webui
+
+dependencies: []
+
+...

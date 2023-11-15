@@ -1,0 +1,24 @@
+---
+
+docker_dependencies:
+  - iproute2
+  - python-pip
+  - python-certifi
+  - python-idna
+  - python-charset-normalizer
+  - python-websocket-client
+  - python-packaging
+  - python-urllib3
+  - python-requests
+  - python-docker
+
+docker_defaults_python_packages: []
+
+docker_packages:
+  - docker
+  - docker-openrc
+
+docker_containerd:
+  socket: /run/docker/containerd/containerd.sock
+
+...

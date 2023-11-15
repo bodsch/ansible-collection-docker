@@ -1,0 +1,91 @@
+---
+
+- name: "pull container from container registry"
+  community.general.docker_image:
+    name: "{{ item }}"
+    source: pull
+    force_tag: true
+    force_source: true
+  register: _container_images_information_pulled
+  ignore_errors: false
+  loop: "{{ container_images_needed }}"
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - container_pull
+
+- name: update needed | true  # noqa no-handler
+  ansible.builtin.set_fact:
+    container_update_needed: true
+    container_changed: "{{ _container_images_information_pulled | changed }}"
+  when:
+    - _container_images_information_pulled.changed
+  tags:
+    - container_pull
+
+- name: all images are up to date
+  ansible.builtin.debug:
+    msg:
+      - all images are up to date ...
+  when:
+    - not container_update_needed
+  tags:
+    - container_pull
+
+- name: container restart needed
+  ansible.builtin.debug:
+    msg:
+      - container restart needed ...
+      - "changed container(s) {{ container_changed | list }}"
+  when:
+    - container_update_needed
+  tags:
+    - container_pull
+
+- name: update container for recreate running docker instance
+  ansible.builtin.set_fact:
+    container: "{{ container | update(container_changed) }}"
+  when:
+    - container_update_needed
+  tags:
+    - container_pull
+
+# READ local_facts
+# read a present update_container from ansible facts
+#
+- name: set local fact for container
+  ansible.builtin.set_fact:
+    local_container: "{{ ansible_local.update_container.update_needed }}"
+  when:
+    - ansible_local.update_container is defined
+    - ansible_local.update_container.update_needed is defined
+    - ansible_local.update_container.update_needed | length != 0
+  tags:
+    - container_pull
+
+- name: save changed containers
+  when:
+    - container_update_needed
+    - container | length != 0
+  tags:
+    - container_pull
+  block:
+    - name: create custom fact file
+      bodsch.core.facts:
+        name: update_container
+        facts:
+          update_needed: "{{ container }}"
+
+    - name: do facts module to get latest information
+      ansible.builtin.setup:
+
+- name: redefine container from local fact
+  ansible.builtin.set_fact:
+    container: "{{ local_container }}"
+  when:
+    - local_container is defined
+    - local_container | length != 0
+  tags:
+    - container_pull
+
+...

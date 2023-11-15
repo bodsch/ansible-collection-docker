@@ -1,0 +1,82 @@
+---
+
+- name: "launching container (ansible < 2.10)"
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    hostname: "{{ item.name }}"
+    image: "{{ item.image }}"
+    capabilities: "{{ item.capabilities | default(omit) }}"
+    command: "{{ item.command | default(omit) }}"
+    comparisons:
+      # '*': ignore
+      image: strict   # don't restart containers with older versions of the image
+      env: strict     # we want precisely this environment
+      labels: ignore
+    cpu_period: "{{ item.cpu_period | default(omit) }}"
+    cpu_quota: "{{ item.cpu_quota | default(omit) }}"
+    cpu_shares: "{{ item.cpu_shares | default(omit) }}"
+    cpus: "{{ item.cpus | default(omit) }}"
+    cpuset_cpus: "{{ item.cpuset_cpus | default(omit) | string }}"
+    cpuset_mems: "{{ item.cpuset_mems | default(omit) | string }}"
+    devices: "{{ item.devices | default(omit) }}"
+    dns_servers: "{{ item.dns_servers | default(omit) }}"
+    entrypoint: "{{ item.entrypoint | default(omit) }}"
+    env_file: "{{ container_env_directory }}/{{ item.name }}/container.env"
+    etc_hosts: "{{ item.etc_hosts | default(omit) }}"
+    exposed_ports: "{{ item.exposed_ports | default(omit) }}"
+    force_kill: "{{ item.force_kill | default(omit) }}"
+    groups: "{{ item.groups | default(omit) }}"
+    healthcheck: "{{ item.healthcheck | default(omit) }}"
+    kernel_memory: "{{ item.kernel_memory | default(omit) }}"
+    labels: "{{ item.labels | default({}) }}"
+    links: "{{ item.links | default(omit) }}"
+    log_driver: "{{ item.log_driver | default('json-file') }}"
+    log_options: "{{ item.log_options | default({}) }}"
+    memory: "{{ item.memory | default(omit) }}"
+    memory_reservation: "{{ item.memory_reservation | default(omit) }}"
+    memory_swap: "{{ item.memory_swap | default(omit) }}"
+    memory_swappiness: "{{ item.memory_swappiness | default(omit) }}"
+    mounts: "{{ item.mounts | default([]) | remove_source_handling }}"
+    network_mode: "{{ item.network_mode | default('bridge') }}"
+    # ansible 2.10
+    # container_default_behavior: "compatibility"
+    networks: "{{ item.networks | default(omit) }}"
+    networks_cli_compatible: true
+    output_logs: true
+    privileged: "{{ item.privileged | default(omit) }}"
+    published_ports: "{{ item.published_ports | default(omit) }}"
+    read_only: "{{ item.read_only | default(omit) }}"
+    recreate: "{{ item.recreate | default(omit) }}"  # <==  RESTARTS container after EVERY ansible run
+    restart: "{{ item.restart | default(omit) }}"
+    restart_policy: "{{ item.restart_policy | default('on-failure') }}"
+    restart_retries: "{{ item.restart_retries | default(omit) }}"
+    state: "{{ item.state | default('started') }}"
+    ulimits: "{{ item.ulimits | default(omit) }}"
+    volumes: "{{ item.volumes | default([]) | remove_custom_fields }}"
+    volumes_from: "{{ item.volumes_from | default([]) }}"
+  register: create_container_instances
+  ignore_errors: true
+  with_items: "{{ container }}"
+  loop_control:
+    label: "{{ item.name }} - hostname: {{ item.name }} - image: {{ item.image }}"
+  when: "ansible_version.full is version_compare('2.10', '<')"
+  tags:
+    - container_launch
+
+- name: reporting changes
+  ansible.builtin.debug:
+    msg: "{{ create_container_instances.results | selectattr('changed', 'equalto', True) | reporting }}"
+  when:
+    - container_reporting_changes
+  tags:
+    - container_launch
+
+- name: failed changes
+  ansible.builtin.debug:
+    msg: "{{ create_container_instances.results | selectattr('failed', 'equalto', True) | reporting }}"
+  when:
+    - container_reporting_changes
+  tags:
+    - container_launch
+
+...

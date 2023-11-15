@@ -1,0 +1,27 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description      = registry ui, a Web UI for Docker Registry
+After            = network-online.target
+
+[Service]
+Type             = simple
+Environment      = GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
+Environment      = HOME={{ registry_ui_data_dir }}
+EnvironmentFile  = {{ registry_ui_defaults_directory }}/registry-ui
+
+User             = {{ registry_ui_system_user }}
+Group            = {{ registry_ui_system_group }}
+WorkingDirectory = {{ registry_ui_data_dir }}
+
+ExecReload       = /bin/kill -HUP $MAINPID
+ExecStart        = /usr/bin/registry-ui $OPTIONS
+
+LimitNOFILE      = 65000
+SyslogIdentifier = registry-ui
+Restart          = on-failure
+RestartSec       = 30s
+RestartSteps     = 20
+
+[Install]
+WantedBy         = multi-user.target

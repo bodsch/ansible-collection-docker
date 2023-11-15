@@ -1,0 +1,41 @@
+#!/usr/bin/openrc-run
+
+description="registry, the Open Source Registry implementation for storing and distributing container images using the OCI Distribution Specification"
+pidfile=${pidfile:-"/run/${RC_SVCNAME}.pid"}
+user=${user:-${SVCNAME}}
+group=${group:-${SVCNAME}}
+
+command="/usr/bin/registry"
+supervisor="supervise-daemon"
+
+command_args="${command_args:-serve /etc/docker/registry/config.yml}"
+command_user="${user}:${group}"
+
+command_args_background="--background"
+required_files="/etc/docker/registry/config.yml"
+
+output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
+error_log="${output_log}"
+extra_started_commands="reload"
+
+depend() {
+  # need localmount net
+  # use dns
+  after sysfs net
+}
+
+start_pre() {
+  [ -d $(dirname ${output_log}) ] ||  mkdir $(dirname ${output_log})
+  chown -R ${command_user} $(dirname ${output_log})
+  chown -R ${command_user} {{ registry_data_dir }}
+}
+
+reload() {
+  ebegin "Reloading ${SVCNAME}"
+  if [ ! -r "${pidfile}" ]; then
+    eend 1 "${RC_SVCNAME} not running"
+  else
+    kill -s HUP $(cat "${pidfile}") 2> /dev/null
+    eend $?
+  fi
+}

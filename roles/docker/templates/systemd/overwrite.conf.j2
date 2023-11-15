@@ -1,0 +1,9 @@
+{{ ansible_managed | comment }}
+
+[Service]
+
+EnvironmentFile   = {{ docker_defaults_directory }}/docker
+ExecStart         =
+ExecStart         = /usr/bin/dockerd $OPTIONS
+
+SyslogIdentifier  = docker

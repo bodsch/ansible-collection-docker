@@ -1,0 +1,26 @@
+---
+
+- name: create registry-ui configuration directory
+  ansible.builtin.file:
+    path: "{{ registry_ui_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ registry_ui_system_group }}"
+    mode: 0775
+
+- name: create config.yml
+  ansible.builtin.template:
+    src: "registry-ui/config.yml.j2"
+    dest: "{{ registry_ui_config_dir }}/config.yml"
+    force: true
+    owner: root
+    group: "{{ registry_ui_system_group }}"
+    mode: 0664
+  notify:
+    - validate config
+    - reload registry-ui
+
+- name: restart registry if needed
+  ansible.builtin.meta: flush_handlers
+
+...

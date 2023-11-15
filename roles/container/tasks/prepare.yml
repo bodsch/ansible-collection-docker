@@ -1,0 +1,164 @@
+---
+
+- name: "include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})"
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      paths:
+        - "vars"
+      files:
+        # eg. debian-10 / ubuntu-20.04 / centos-8 / oraclelinux-8
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+        # eg. archlinux-systemd / archlinux-openrc
+        - "{{ ansible_distribution | lower }}-{{ ansible_service_mgr | lower }}.yml"
+        # eg. debian / ubuntu / centos / oraclelinux
+        - "{{ ansible_distribution | lower }}.yml"
+        # eg. redhat / debian / archlinux
+        - "{{ ansible_os_family | lower }}.yml"
+        - default.yaml
+      skip: true
+
+- name: python support
+  when:
+    - container_python_packages is defined
+    - container_python_packages | count > 0
+  block:
+    - name: create pip requirements file
+      bodsch.core.pip_requirements:
+        name: container
+        requirements: "{{ container_python_packages }}"
+      register: pip_requirements
+
+    - name: fail if pip not installed
+      ansible.builtin.fail:
+        msg: python pip is not installed
+      when:
+        - not pip_requirements.pip.present
+
+    - name: install container python packages  # noqa no-handler
+      ansible.builtin.pip:
+        state: present
+        requirements: "{{ pip_requirements.requirements_file }}"
+        extra_args: "{{ container_python_extra_args | default([]) | bodsch.core.python_extra_args(python_version=ansible_python.version) | default(omit) }}"
+      when:
+        - pip_requirements.requirements_file is defined
+        - pip_requirements.changed
+
+    - name: do facts module to get latest information
+      ansible.builtin.setup:
+
+- name: install dependency
+  ansible.builtin.package:
+    name: "{{ container_packages }}"
+    state: present
+
+- name: filter container by {{ container_filter.by }}
+  ansible.builtin.set_fact:
+    container: "{{ container | bodsch.docker.container_filter_by(container_filter.by, container_filter.names) }}"
+  when:
+    - container_filter is defined
+    - container_filter.by is defined
+    - container_filter.by in ["name", "hostname", "image"]
+    - container_filter.names is defined
+    - container_filter.names | count > 0
+
+- name: define container registry fact
+  ansible.builtin.set_fact:
+    container_reg: "{{ container_registry | bodsch.docker.combine_registries(container_registry_default) }}"
+
+- name: organise some information about the containers
+  ansible.builtin.set_fact:
+    container_information: "{{ container | bodsch.docker.container_filter(['present', 'only_present']) }}"
+  when:
+    - container | default([]) | count > 0
+
+- name: define important facts about containers
+  ansible.builtin.set_fact:
+    container_names: "{{ container_information.names }}"
+    container_to_launch: "{{ container_information.launch }}"
+    container_mounts: "{{ container_information.mounts }}"
+    container_volumes: "{{ container_information.volumes }}"
+    container_environnments: "{{ container_information.environnments }}"
+    container_images_needed: "{{ container_information.images }}"
+  when:
+    - container_information | default({})
+
+- name: validate container mountpoints
+  when:
+    - container_mounts | count > 0
+  block:
+    - name: validate container mountpoints
+      ansible.builtin.set_fact:
+        container_validate_mounts: "{{ container | bodsch.docker.validate_mountpoints }}"
+      # no_log: true
+
+    - name: fail
+      when:
+        - container_validate_mounts | count > 0
+      block:
+        - name: broken mountpoint definitions
+          ansible.builtin.debug:
+            msg: "{{ container_validate_mounts }}"
+
+        - name: fail with broken mountpoint definitions
+          ansible.builtin.fail:
+            msg: "your mounts definition is not valid!\n
+                  The following parameters are required:\n
+                  - source\n
+                  - target\n
+                  - type\n
+                  'type' may only have one of the following values: 'bind','tmpfs' or 'volume'\n
+                  read: https://docs.ansible.com/ansible/latest/collections/community/docker/docker_container_module.html#parameter-mounts"
+
+- name: create base directory to persist docker environnments
+  become: true
+  ansible.builtin.file:
+    name: "{{ container_env_directory }}"
+    state: directory
+    mode: 0755
+
+- name: create application directory to persist docker environnments
+  become: true
+  when:
+    - container_names | default([]) | count > 0
+  container_directories:
+    base_directory: "{{ container_env_directory }}"
+    container: "{{ container_names }}"
+    owner: '1000'
+    group: '1000'
+    mode: "0775"
+  register: _created_directories
+  notify:
+    - created application directories
+
+- name: persist application docker environnments or properties
+  become: true
+  when:
+    - container_environnments | default([]) | count > 0
+  container_environments:
+    base_directory: "{{ container_env_directory }}"
+    container: "{{ container_environnments }}"
+    diff: false
+  register: _container_data
+  notify:
+    - container restart necessary
+    - update container for recreate running docker instance
+    - created environnments or properties
+
+- name: create container volumes and mountpoints
+  become: true
+  when:
+    - container_mounts | default([]) | count > 0 or
+      container_volumes | default([]) | count > 0
+  container_mounts:
+    data: "{{ container }}"
+    volumes: true
+    mounts: true
+  register: _created_directories
+  notify:
+    - created container volumes and mountpoints
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+...

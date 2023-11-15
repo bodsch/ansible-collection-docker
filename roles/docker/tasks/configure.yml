@@ -1,0 +1,119 @@
+---
+
+- name: create docker config directory
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    mode: 0775
+    owner: root
+    group: root
+
+- name: manage users for docker
+  ansible.builtin.include_tasks: users.yml
+  loop: "{{ docker_users }}"
+  loop_control:
+    index_var: index
+    label: "username: {{ item }}"
+  when:
+    - docker_users is defined
+    - docker_users | count > 0
+
+- name: manage docker client configuration
+  bodsch.docker.docker_client_configs:
+    configs: "{{ docker_client_config }}"
+  when:
+    - docker_client_config is defined
+    - docker_client_config | count > 0
+
+# configure proxy settings if enabled
+- name: configure systemd
+  when:
+    - ansible_service_mgr == 'systemd'
+  block:
+    - name: create dropin directory
+      ansible.builtin.file:
+        path: "/etc/systemd/system/docker.service.d"
+        state: "directory"
+        mode: 0750
+        owner: root
+        group: root
+
+    - name: create systemd dropin to using configuration
+      ansible.builtin.template:
+        src: systemd/overwrite.conf.j2
+        dest: "/etc/systemd/system/docker.service.d/overwrite.conf"
+        mode: 0644
+        owner: root
+        group: root
+      notify:
+        - daemon reload
+
+    - name: create systemd dropin for proxy
+      ansible.builtin.template:
+        src: "systemd/proxy.conf.j2"
+        dest: "/etc/systemd/system/docker.service.d/proxy.conf"
+        mode: 0644
+        owner: root
+        group: root
+      notify:
+        - daemon reload
+      when:
+        - docker_proxy.enabled
+
+- name: create openrc config file
+  ansible.builtin.template:
+    src: openrc/conf.d/docker.j2
+    dest: /etc/conf.d/docker
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - daemon reload
+  when:
+    - ansible_service_mgr == 'openrc'
+
+- name: flush handlers at this point to avoid double restart
+  ansible.builtin.meta: flush_handlers
+
+- name: create docker config file daemon.json
+  bodsch.docker.docker_common_config:
+    state: present
+    diff_output: "{{ docker_config_diff }}"
+    log_driver: "{{ docker_config.log_driver | default(omit) }}"
+    log_opts: "{{ docker_config.log_opts | default(omit) }}"
+    log_level: "{{ docker_config.log_level | default(omit) }}"
+    dns: "{{ docker_config.dns | default(omit) }}"
+    dns_opts: "{{ docker_config.dns_opts | default(omit) }}"
+    dns_search: "{{ docker_config.dns_search | default(omit) }}"
+    data_root: "{{ docker_config.data_root | default(omit) }}"
+    max_concurrent_downloads: "{{ docker_config.max_concurrent_downloads | int | default(omit) }}"
+    max_concurrent_uploads: "{{ docker_config.max_concurrent_uploads | int | default(omit) }}"
+    max_download_attempts: "{{ docker_config.max_download_attempts | int | default(omit) }}"
+    metrics_addr: "{{ docker_config.metrics_addr | default(omit) }}"
+    debug: "{{ docker_config.debug | default('false') | bool }}"
+    selinux_enabled: "{{ docker_config.selinux_enabled | default('false') | bool }}"
+    seccomp_profile: "{{ docker_config.seccomp_profile | default(omit) }}"
+    experimental: "{{ docker_config.experimental | default('false') | bool }}"
+    storage_driver: "{{ docker_config.storage_driver | default(omit) }}"
+    storage_opts: "{{ docker_config.storage_opts | default(omit) }}"
+    group: "{{ docker_config.group | default(omit) }}"
+    bridge: "{{ docker_config.bridge | default(omit) }}"
+    bip: "{{ docker_config.bip | default(omit) }}"
+    ip: "{{ docker_config.ip | default(omit) }}"
+    fixed_cidr: "{{ docker_config.fixed_cidr | default(omit) }}"
+    fixed_cidr_v6: "{{ docker_config.fixed_cidr_v6 | default(omit) }}"
+    default_gateway: "{{ docker_config.default_gateway | default(omit) }}"
+    default_gateway_v6: "{{ docker_config.default_gateway_v6 | default(omit) }}"
+    hosts: "{{ docker_config.hosts | default(omit) }}"
+    insecure_registries: "{{ docker_config.insecure_registries | default(omit) }}"
+    shutdown_timeout: "{{ docker_config.shutdown_timeout | int | default(omit) }}"
+    tls_verify: "{{ docker_config.tls.verify | default('false') | bool }}"
+    tls_ca_cert: "{{ docker_config.tls.ca_cert | default(omit) }}"
+    tls_cert: "{{ docker_config.tls.cert | default(omit) }}"
+    tls_key: "{{ docker_config.tls.key | default(omit) }}"
+  register: _changed_docker_configuration
+  notify:
+    - restart docker
+    - information about config changes
+
+...

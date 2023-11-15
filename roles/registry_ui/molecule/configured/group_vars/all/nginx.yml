@@ -1,0 +1,136 @@
+---
+
+nginx_events:
+  multi_accept: true
+
+nginx_gzip:
+  enabled: true
+
+nginx_logformat:
+  json_combined:
+    format: |
+      '{'
+        '"time_local": "$time_local",'
+        '"remote_addr": "$remote_addr",'
+        '"remote_user": "$remote_user",'
+        '"request": "$request",'
+        '"status": "$status",'
+        '"body_bytes_sent": "$body_bytes_sent",'
+        '"request_time": "$request_time",'
+        '"http_referrer": "$http_referer",'
+        '"http_user_agent": "$http_user_agent"'
+      '}';
+    # escape: json
+
+# The client_max_body_size parameter is now set to 16384m, making the maximum upload size equal to 16GB.
+nginx_http:
+  rewrite_log: true
+  client_max_body_size: 16384m
+
+  extra_options: |
+    ## Set a variable to help us decide if we need to add the
+    ## 'Docker-Distribution-Api-Version' header.
+    ## The registry always sets this header.
+    ## In the case of nginx performing auth, the header is unset
+    ## since nginx is auth-ing before proxying.
+    map $upstream_http_docker_distribution_api_version $docker_distribution_api_version {
+      '' 'registry/2.0';
+    }
+
+
+nginx_custom_includes:
+  registry.conf: |
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#satisfy
+    satisfy any;
+    # Die IP des HAProxy
+    # damit ist es möglich das Jobs, die über den Jenkins aufgerufen werden und gegen
+    # die admin URLs (https://admin.*.DOMAIN.TLD/admin/*) gehen
+    # ohne Username/Passwort zu nutzen
+    # Alle anderen Requests benötigen weiterhin die Authentifizierung via BA
+    allow 192.168.0.0/24;
+    deny  all;
+
+    auth_basic           "Administrator’s Area";
+    auth_basic_user_file "{{ htpasswd_credentials_path }}/.admin-passwdfile";
+
+
+nginx_vhosts:
+  - name: registry
+    filename: 00-registry.conf
+    state: present  # default: present
+    enabled: true   # default: true
+
+    domains:
+      - registry.molecule.lan
+      - molecule.molecule.lan
+
+    # creates also an HTTP vhost only for redirect to HTTPS
+    #redirect:
+    #  from_port: 80
+
+    listen:
+      - "80"
+      # - "443 ssl http2"
+
+    upstreams:
+      - name: registry
+        servers:
+          - 127.0.0.1:5000
+      - name: registry_ui_metrics
+        servers:
+          - 127.0.0.1:5001
+      - name: registry_ui_ui
+        servers:
+          - 127.0.0.1:8000
+
+    logfiles:
+      access:
+        file: /var/log/nginx/registry.molecule.lan/access.log
+        # loglevel: json_combined
+      error:
+        file: /var/log/nginx/registry.molecule.lan/error.log
+        loglevel: notice
+
+    # # enable ssl
+    # ssl:
+    #   enabled: false
+    #   certificate: /etc/snakeoil/matrix.lan/matrix.lan.crt
+    #   certificate_key: /etc/snakeoil/matrix.lan/matrix.lan.key
+    #   dhparam: /etc/snakeoil/matrix.lan/dh.pem
+
+    locations:
+      "/metrics":
+        options: |
+          add_header X-Backend "registry-metrics";
+
+          proxy_pass                            http://registry_ui_metrics;
+          proxy_set_header    Host              $host;
+          proxy_set_header    X-Real-IP         $remote_addr;
+          proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header    X-Forwarded-Proto $scheme;
+
+      "/":
+        options: |
+          add_header X-Backend "registry-ui";
+
+          proxy_pass                            http://registry_ui_ui;
+          proxy_set_header    Host              $host;
+          proxy_set_header    X-Real-IP         $remote_addr;
+          proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header    X-Forwarded-Proto $scheme;
+
+      "/v2/":
+        options: |
+          if ($http_user_agent ~ "^(docker\/1\.(3|4|5(?!\.[0-9]-dev))|Go ).*$" ) {
+            return 404;
+          }
+
+          add_header X-Backend "registry";
+          add_header 'Docker-Distribution-Api-Version' $docker_distribution_api_version always;
+
+          proxy_pass                            http://registry;
+          proxy_set_header    Host              $http_host;
+          proxy_set_header    X-Real-IP         $remote_addr;
+          proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header    X-Forwarded-Proto $scheme;
+          proxy_read_timeout                    900;

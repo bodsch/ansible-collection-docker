@@ -1,0 +1,163 @@
+---
+
+- name: include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      paths:
+        - "vars"
+      files:
+        # eg. debian-10 / ubuntu-20.04 / centos-8 / oraclelinux-8
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+        # eg. archlinux-systemd / archlinux-openrc
+        - "{{ ansible_distribution | lower }}-{{ ansible_service_mgr | lower }}.yml"
+        # eg. debian / ubuntu / centos / oraclelinux
+        - "{{ ansible_distribution | lower }}.yml"
+        # eg. redhat / debian / archlinux
+        - "{{ ansible_os_family | lower }}.yml"
+        # artixlinux
+        - "{{ ansible_os_family | lower | replace(' ', '') }}.yml"
+        - default.yaml
+      skip: true
+
+- name: define delegate instance for download handling
+  ansible.builtin.set_fact:
+    registry_delegate_to: "{{ ansible_host }}"
+    registry_local_tmp_directory: "{{
+        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+        default('/var/cache/ansible/registry', true) }}/{{ registry_version }}"
+  when:
+    - registry_direct_download
+
+- name: install dependency
+  ansible.builtin.package:
+    name: "{{ registry_requirements }}"
+    state: present
+  when:
+    - registry_requirements | default([]) | count > 0
+
+- name: get latest release
+  delegate_to: localhost
+  become: false
+  run_once: true
+  when:
+    - registry_version == "latest"
+  block:
+    - name: get latest release
+      delegate_to: localhost
+      become: false
+      run_once: true
+      bodsch.scm.github_latest:
+        project: distribution
+        repository: distribution
+        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+      register: _latest_release
+
+    - name: re-define registry_version
+      ansible.builtin.set_fact:
+        registry_version: "{{ _latest_release.latest_release }}"
+
+- name: detect our installation path
+  ansible.builtin.stat:
+    path: "{{ registry_install_path | dirname }}"
+    get_checksum: false
+  register: stat_registry_path
+  ignore_errors: true
+
+- name: old installation
+  when:
+    - stat_registry_path is defined
+    - stat_registry_path.stat is defined
+    - stat_registry_path.stat.isdir is defined
+    - not stat_registry_path.stat.isdir
+  block:
+    - name: stop old service
+      ansible.builtin.service:
+        name: registry
+        state: stopped
+        enabled: false
+      notify:
+        - daemon-reload
+
+    - name: remove installed systemd unit
+      ansible.builtin.file:
+        state: absent
+        path: /etc/systemd/system/registry.service
+      when:
+        - ansible_service_mgr | lower == "systemd"
+
+    - name: remove installed registry
+      ansible.builtin.file:
+        state: absent
+        path: "{{ stat_registry_path.stat.path }}"
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: detect installed registry binary
+  ansible.builtin.stat:
+    path: "{{ registry_install_path }}/registry"
+  register: stat_registry_binary
+
+- name: create download directory
+  become: false
+  delegate_to: "{{ registry_delegate_to }}"
+  ansible.builtin.file:
+    path: "{{ registry_local_tmp_directory }}"
+    state: directory
+    mode: 0750
+
+- name: user and group handling
+  when:
+    - registry_system_user != "root" or registry_system_group != "root"
+  block:
+    - name: create registry group
+      ansible.builtin.group:
+        name: "{{ registry_system_group }}"
+        state: present
+        system: true
+      when:
+        - registry_system_group != "root"
+
+    - name: create registry user
+      ansible.builtin.user:
+        name: "{{ registry_system_user }}"
+        groups: "{{ registry_system_group }}"
+        append: true
+        shell: /usr/sbin/nologin
+        system: true
+        createhome: false
+        home: /nonexistent
+      when:
+        - registry_system_user != "root"
+
+- name: create install directory
+  ansible.builtin.file:
+    path: "{{ registry_install_path }}"
+    state: directory
+    owner: "{{ registry_system_user }}"
+    group: "{{ registry_system_group }}"
+    mode: 0755
+
+- name: merge registry configuration between defaults and custom
+  ansible.builtin.set_fact:
+    registry_service: "{{ registry_defaults_service | combine(registry_service, recursive=True) }}"
+    registry_log: "{{ registry_defaults_log | combine(registry_log, recursive=True) }}"
+    registry_storage: "{{ registry_defaults_storage | combine(registry_storage, recursive=True) }}"
+    registry_auth: "{{ registry_defaults_auth | combine(registry_auth, recursive=True) }}"
+    registry_middleware: "{{ registry_defaults_middleware | combine(registry_middleware, recursive=True) }}"
+    registry_reporting: "{{ registry_defaults_reporting | combine(registry_reporting, recursive=True) }}"
+    registry_http: "{{ registry_defaults_http | combine(registry_http, recursive=True) }}"
+    registry_notifications: "{{ registry_defaults_notifications | combine(registry_notifications, recursive=True) }}"
+    registry_redis: "{{ registry_defaults_redis | combine(registry_redis, recursive=True) }}"
+    registry_health: "{{ registry_defaults_health | combine(registry_health, recursive=True) }}"
+    registry_proxy: "{{ registry_defaults_proxy | combine(registry_proxy, recursive=True) }}"
+    registry_compatibility: "{{ registry_defaults_compatibility | combine(registry_compatibility, recursive=True) }}"
+    registry_validation: "{{ registry_defaults_validation | combine(registry_validation, recursive=True) }}"
+
+- name: define registry data directory
+  ansible.builtin.set_fact:
+    registry_data_dir: "{{ registry_storage.filesystem.rootdirectory | default('/var/lib/registry') }}"
+
+...

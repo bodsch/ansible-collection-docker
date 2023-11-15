@@ -1,0 +1,38 @@
+---
+
+- name: ensure {{ docker_service.name }} is running
+  ansible.builtin.service:
+    name: "{{ docker_service.name }}"
+    state: started
+
+- name: test docker plugins
+  become: true
+  remote_user: root
+  docker_plugins:
+    state: test
+    plugin_source: "{{ item.source }}"
+    plugin_version: "{{ item.version }}"
+    plugin_alias: "{{ item.alias }}"
+    data_root: "{{ docker_config.data_root | default(omit) }}"
+  loop: "{{ docker_plugins }}"
+  loop_control:
+    label: "{{ item.alias }}"
+  register: _plugin_state
+
+- name: install docker plugins
+  docker_plugins:
+    state: present
+    plugin_source: "{{ item.source }}"
+    plugin_version: "{{ item.version }}"
+    plugin_alias: "{{ item.alias }}"
+    data_root: "{{ docker_config.data_root | default(omit) }}"
+  loop: "{{ docker_plugins }}"
+  loop_control:
+    label: "{{ item.alias }}"
+  notify:
+    - create daemon.json
+  when:
+    - not _plugin_state.results[0].installed or
+      not _plugin_state.results[0].equal_versions
+
+...

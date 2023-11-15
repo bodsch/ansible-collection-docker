@@ -1,0 +1,108 @@
+---
+
+- name: detect extracted binary file for registry on {{ registry_ui_delegate_to }}
+  become: false
+  delegate_to: "{{ registry_ui_delegate_to }}"
+  run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ registry_ui_local_tmp_directory }}/registry-ui"
+  register: stat_file_binary
+
+- name: copy files
+  when:
+    - stat_file_binary.stat.exists
+  block:
+    - name: propagate registry binaries
+      ansible.builtin.copy:
+        src: "{{ registry_ui_local_tmp_directory }}/registry-ui"
+        dest: "{{ registry_ui_install_path }}/registry-ui"
+        mode: 0755
+        owner: "{{ registry_ui_system_user }}"
+        group: "{{ registry_ui_system_group }}"
+        remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
+
+    - name: propagate static files
+      ansible.builtin.copy:
+        src: "{{ registry_ui_local_tmp_directory }}/{{ item }}/"
+        dest: "{{ registry_ui_data_dir }}/{{ item }}/"
+        mode: 0644
+        owner: "{{ registry_ui_system_user }}"
+        group: "{{ registry_ui_system_group }}"
+        remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
+      loop:
+        - static
+        - templates
+      notify:
+        - reload registry-ui
+
+- name: make files executable
+  ansible.builtin.file:
+    path: "{{ registry_ui_install_path }}/registry-ui"
+    mode: 0755
+    owner: "{{ registry_ui_system_user }}"
+    group: "{{ registry_ui_system_group }}"
+
+- name: create custom fact file
+  bodsch.core.facts:
+    name: registry_ui
+    facts:
+      version: "{{ registry_ui_version }}"
+
+- name: create link to binary
+  ansible.builtin.file:
+    src: "{{ registry_ui_install_path }}/registry-ui"
+    dest: "/usr/bin/registry-ui"
+    state: link
+    force: true
+    follow: false
+  notify:
+    - restart registry-ui
+
+- name: systemd
+  when:
+    - ansible_service_mgr | lower == "systemd"
+  block:
+    - name: create systemd service unit
+      ansible.builtin.template:
+        src: "init/systemd/registry-ui.service.j2"
+        dest: "{{ systemd_lib_directory }}/registry-ui.service"
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - daemon-reload
+        - restart registry-ui
+
+    - name: create systemd service configuration
+      ansible.builtin.template:
+        src: "registry-ui.j2"
+        dest: "{{ registry_ui_defaults_directory }}/registry-ui"
+        force: true
+        owner: root
+        group: "{{ registry_ui_system_group }}"
+        mode: 0640
+      notify:
+        - validate config
+        - reload registry-ui
+
+- name: openrc
+  when:
+    - ansible_service_mgr | lower == "openrc"
+  block:
+    - name: create openrc service configuration
+      ansible.builtin.template:
+        src: "init/openrc/conf.d/registry-ui.j2"
+        dest: "/etc/conf.d/registry-ui"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: create openrc init file
+      ansible.builtin.template:
+        src: "init/openrc/init.d/registry-ui.j2"
+        dest: "/etc/init.d/registry-ui"
+        owner: root
+        group: root
+        mode: 0750
+
+...

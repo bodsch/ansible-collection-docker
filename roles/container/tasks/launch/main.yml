@@ -1,0 +1,23 @@
+---
+
+- name: launch containers
+  ansible.builtin.debug:
+    msg: "{{ container_to_launch | container_names }}"
+
+- name: launch container
+  ansible.builtin.include_tasks: launch_for_older_ansible.yml
+  when: "ansible_version.full is version_compare('2.10', '<')"
+  tags:
+    - container_launch
+
+- name: launch container
+  ansible.builtin.include_tasks: launch_container.yml
+  when: "ansible_version.full is version_compare('2.10', '>=')"
+  tags:
+    - container_launch
+
+- name: create custom fact file
+  bodsch.core.facts:
+    name: update_container
+    facts:
+      update_needed: "{{ container }}"

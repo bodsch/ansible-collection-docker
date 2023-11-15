@@ -1,0 +1,65 @@
+---
+
+- name: copy custom tasks
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin"
+    mode: 0755
+  loop: "{{ container_custom_tasks | default([]) }}"
+  tags:
+    - container_install_pre_or_post_tasks
+
+- name: validate pre tasks
+  when:
+    - container_pre_tasks is defined
+    - container_pre_tasks | count > 0
+  tags:
+    - container_install_pre_or_post_tasks
+  block:
+    - name: ensure pre tasks are available
+      ansible.builtin.stat:
+        path: "{{ item }}"
+        get_checksum: false
+        get_checksum: false
+        get_mime: false
+        get_attributes: false
+      register: _pre_task_available
+      loop: "{{ container_pre_tasks }}"
+
+    - name: assert missing pre task
+      ansible.builtin.assert:
+        that:
+          - _pre_task_available.results | files_available | count == container_pre_tasks | count
+        msg:
+          - not all pre tasks are available
+          - missing {{ container_pre_tasks | difference(_pre_task_available.results | files_available) }}
+        quiet: true
+
+- name: validate post tasks
+  when:
+    - container_post_tasks is defined
+    - container_post_tasks | count > 0
+  tags:
+    - container_install_pre_or_post_tasks
+  block:
+    - name: ensure post tasks are available
+      ansible.builtin.stat:
+        path: "{{ item }}"
+        get_checksum: false
+        get_checksum: false
+        get_mime: false
+        get_attributes: false
+      register: _post_task_available
+      loop: "{{ container_post_tasks }}"
+
+    - name: assert missing post task
+      ansible.builtin.assert:
+        that:
+          - _post_task_available.results | files_available | count == container_post_tasks | count
+        msg:
+          - not all pre tasks are available
+          - missing {{ container_post_tasks | difference(_post_task_available.results | files_available) }}
+        quiet: true
+
+...

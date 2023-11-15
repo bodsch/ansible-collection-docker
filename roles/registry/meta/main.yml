@@ -1,0 +1,27 @@
+---
+
+galaxy_info:
+  role_name: registry
+
+  author: Bodo Schulz
+  description: ansible role to setup "the" docker registry
+  license: Apache
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: ArchLinux
+    - name: Debian
+      versions:
+        # 10
+        - buster
+        # 11
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - registry
+    - docker
+
+dependencies: []
+
+...

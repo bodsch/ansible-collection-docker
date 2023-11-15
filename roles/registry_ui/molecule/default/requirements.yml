@@ -1,0 +1,6 @@
+---
+
+- name: syslog-ng
+  src: bodsch.syslog_ng
+
+...

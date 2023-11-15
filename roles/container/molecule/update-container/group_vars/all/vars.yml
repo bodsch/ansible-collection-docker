@@ -1,0 +1,20 @@
+---
+
+# container_clean_update_fact: false
+
+container_fail:
+  error_at_launch: false
+
+container:
+  - name: busybox
+    hostname: busybox
+    image: busybox:latest
+  - name: busybox-2
+    hostname: busybox-2
+    image: busybox:latest
+
+container_post_tasks:
+  - /usr/local/bin/remove_untagged_images.sh
+  - /usr/local/bin/list_all_images.sh
+
+...

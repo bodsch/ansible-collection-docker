@@ -1,0 +1,83 @@
+---
+
+- name: preparement
+  ansible.builtin.include_tasks: prepare.yml
+  tags:
+    - always
+
+- name: pre and post tasks
+  ansible.builtin.include_tasks: custom-tasks/main.yml
+  when:
+    - container_custom_tasks | default([]) | count > 0
+    - (container_pre_tasks | default([]) | count > 0) or
+      (container_post_tasks | default([]) | count > 0)
+  tags:
+    - container_install_pre_or_post_tasks
+
+- name: login into container registry
+  ansible.builtin.include_tasks: login.yml
+  no_log: true
+  loop:
+    "{{ container_reg }}"
+  loop_control:
+    index_var: index
+    loop_var: registry
+    label: ""
+  when:
+    - container_reg is defined
+    - container_reg | bodsch.core.type == "list"
+    - container_reg | count > 0
+    - registry.username is defined
+    - registry.password is defined
+    - registry.username | string | length > 0
+    - registry.password | string | length > 0
+  tags:
+    - container_registry_login
+    - container_pull
+
+- name: download new container
+  ansible.builtin.include_tasks: download.yml
+  when:
+    - container_images_needed | default([]) | count > 0
+  tags:
+    - container_pull
+
+- name: network
+  ansible.builtin.include_tasks: network.yml
+  when:
+    - container_network | default([]) | count > 0
+    - container_use_network
+  tags:
+    - container_network
+
+- name: execute pre-tasks
+  ansible.builtin.include_tasks: custom-tasks/pre-tasks.yml
+  when:
+    - container_pre_tasks | default([]) | count > 0
+  tags:
+    - container_install_pre_or_post_tasks
+    - container_exec_pre_tasks
+
+- name: launch container
+  ansible.builtin.include_tasks: launch/main.yml
+  when:
+    - container_to_launch | default([]) | count > 0
+  tags:
+    - container_launch
+
+- name: execute post-tasks
+  ansible.builtin.include_tasks: custom-tasks/post-tasks.yml
+  when:
+    - container_post_tasks | default([]) | count > 0
+  tags:
+    - container_install_pre_or_post_tasks
+    - container_exec_post_tasks
+
+- name: remove update fact
+  ansible.builtin.file:
+    state: absent
+    path: /etc/ansible/facts.d/update_container.fact
+  when:
+    - container_clean_update_fact
+
+...

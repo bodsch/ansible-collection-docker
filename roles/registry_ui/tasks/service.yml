@@ -1,0 +1,10 @@
+---
+
+- name: ensure registry-ui is enabled on boot
+  become: true
+  ansible.builtin.service:
+    name: registry-ui
+    enabled: true
+    state: started
+
+...

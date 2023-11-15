@@ -1,0 +1,99 @@
+---
+
+- name: detect binary file for registry on {{ registry_ui_delegate_to }}
+  become: false
+  delegate_to: "{{ registry_delegate_to }}"
+  ansible.builtin.stat:
+    path: "{{ registry_local_tmp_directory }}/registry"
+  register: stat_file_binary
+
+- name: propagate registry binaries
+  ansible.builtin.copy:
+    src: "{{ registry_local_tmp_directory }}/registry"
+    dest: "{{ registry_install_path }}/registry"
+    mode: 0755
+    owner: "{{ registry_system_user }}"
+    group: "{{ registry_system_group }}"
+    remote_src: "{{ 'true' if registry_direct_download else 'false' }}"
+  when:
+    - stat_file_binary.stat.exists
+
+- name: make files executable
+  ansible.builtin.file:
+    path: "{{ registry_install_path }}/registry"
+    mode: 0755
+    owner: "{{ registry_system_user }}"
+    group: "{{ registry_system_group }}"
+
+- name: create custom fact file
+  bodsch.core.facts:
+    name: registry
+    facts:
+      version: "{{ registry_version }}"
+
+- name: create registry data directory
+  ansible.builtin.file:
+    state: directory
+    path: "{{ registry_data_dir }}"
+    mode: 0770
+    owner: "{{ registry_system_user }}"
+    group: "{{ registry_system_group }}"
+
+- name: create link to binary
+  ansible.builtin.file:
+    src: "{{ registry_install_path }}/registry"
+    dest: "/usr/bin/registry"
+    state: link
+    force: true
+    follow: false
+  notify:
+    - restart registry
+
+- name: systemd
+  when:
+    - ansible_service_mgr | lower == "systemd"
+  block:
+    - name: create systemd service unit
+      ansible.builtin.template:
+        src: "init/systemd/registry.service.j2"
+        dest: "{{ systemd_lib_directory }}/registry.service"
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - daemon-reload
+        - restart registry
+
+    - name: create systemd service configuration
+      ansible.builtin.template:
+        src: "registry.j2"
+        dest: "{{ registry_defaults_directory }}/registry"
+        force: true
+        owner: root
+        group: "{{ registry_system_group }}"
+        mode: 0640
+      notify:
+        - validate config
+        - reload registry
+
+- name: openrc
+  when:
+    - ansible_service_mgr | lower == "openrc"
+  block:
+    - name: create openrc service configuration
+      ansible.builtin.template:
+        src: "init/openrc/conf.d/registry.j2"
+        dest: "/etc/conf.d/registry"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: create openrc init file
+      ansible.builtin.template:
+        src: "init/openrc/init.d/registry.j2"
+        dest: "/etc/init.d/registry"
+        owner: root
+        group: root
+        mode: 0750
+
+...

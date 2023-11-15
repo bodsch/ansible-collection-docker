@@ -1,0 +1,7 @@
+---
+
+skip_list:
+  - name[casing]
+  - name[template]
+  - args[module]
+  - command-instead-of-module

@@ -1,0 +1,52 @@
+---
+
+- name: checksum
+  become: false
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: get checksum list
+      bodsch.scm.github_checksum:
+        project: distribution
+        repository: distribution
+        checksum_file: "registry_{{ registry_version }}_linux_{{ system_architecture }}.tar.gz.sha256"
+        user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+        password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+        architecture: "{{ ansible_architecture }}"
+        system: "{{ ansible_facts.system }}"
+        version: "v{{ registry_version }}"
+      register: _latest_checksum
+
+    - name: define checksum for {{ go_arch }} architecture
+      ansible.builtin.set_fact:
+        __registry_checksum: "{{ _latest_checksum.checksum }}"
+      when:
+        - _latest_checksum.rc == 0
+        - _latest_checksum.checksum is defined
+        - _latest_checksum.checksum | string | length > 0
+
+- name: download registry binary archive
+  become: false
+  delegate_to: "{{ registry_delegate_to }}"
+  ansible.builtin.get_url:
+    url: "{{ registry_release_download_url }}/download/v{{ registry_version }}/registry_{{ registry_version }}_{{ ansible_facts.system }}_{{ system_architecture }}.tar.gz"
+    dest: "{{ registry_local_tmp_directory }}/registry-{{ system_architecture }}.tar.gz"
+    checksum: "sha256:{{ __registry_checksum }}"
+    mode: 0660
+  register: _download_archive
+  until: _download_archive is succeeded
+  retries: 5
+  delay: 2
+  check_mode: false
+
+- name: extract registry archive
+  become: false
+  delegate_to: "{{ registry_delegate_to }}"
+  run_once: "{{ 'false' if registry_direct_download else 'true' }}"
+  ansible.builtin.unarchive:
+    src: "{{ registry_local_tmp_directory }}/registry-{{ system_architecture }}.tar.gz"
+    dest: "{{ registry_local_tmp_directory }}"
+    copy: false
+  register: _extract_archive
+
+...

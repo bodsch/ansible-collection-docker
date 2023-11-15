@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+. hooks/molecule.rc
+
+mkdir \
+  --parents \
+  "${COLLECTION_DIR}"
+
+rsync \
+  --archive \
+  --verbose \
+  --recursive \
+  --exclude hooks \
+  --exclude __pycache__ \
+  --delete \
+  ../ansible-collection-${COLLECTION_NAME}/* \
+  "${COLLECTION_DIR}/"

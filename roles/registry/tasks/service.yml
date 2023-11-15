@@ -1,0 +1,10 @@
+---
+
+- name: ensure registry is enabled on boot
+  become: true
+  ansible.builtin.service:
+    name: registry
+    enabled: true
+    state: started
+
+...

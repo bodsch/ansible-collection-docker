@@ -1,0 +1,16 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% set _log_level = "info" %}
+{% if registry_ui_service.log_level is defined and
+      registry_ui_service.log_level | string | length > 0 and
+      registry_ui_service.log_level in ["error", "warn", "info", "debug" ] %}
+  {% set _log_level = registry_ui_service.log_level %}
+{% endif %}
+
+user="{{ registry_ui_system_user }}"
+group="{{ registry_ui_system_group }}"
+
+command_args="
+  -config-file {{ registry_ui_config_dir }}/config.yml \
+  -log-level {{ _log_level }}"
