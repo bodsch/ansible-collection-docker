@@ -32,7 +32,7 @@ env:
 
 jobs:
   arch:
-    name: "${{ matrix.collection_role }} - ${{ matrix.image }}, ansible: ${{ matrix.ansible-version }}, python: ${{ matrix.python_version }}"
+    name: "${{ matrix.image }}: ${{ matrix.collection_role }} (ansible ${{ matrix.ansible-version }}, python ${{ matrix.python_version }})"
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -87,8 +87,8 @@ jobs:
           ANSIBLE_FORCE_COLOR: '1'
           DISTRIBUTION: ${{ matrix.image }}
 
-  deb:
-    name: "${{ matrix.collection_role }} - ${{ matrix.image }}, ansible: ${{ matrix.ansible-version }}, python: ${{ matrix.python_version }}"
+  debian:
+    name: "${{ matrix.image }}: ${{ matrix.collection_role }} (ansible ${{ matrix.ansible-version }}, python ${{ matrix.python_version }})"
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -144,8 +144,8 @@ jobs:
           ANSIBLE_FORCE_COLOR: '1'
           DISTRIBUTION: ${{ matrix.image }}
 
-  ubu:
-    name: "${{ matrix.collection_role }} - ${{ matrix.image }}, ansible: ${{ matrix.ansible-version }}, python: ${{ matrix.python_version }}"
+  ubuntu:
+    name: "${{ matrix.image }}: ${{ matrix.collection_role }} (ansible ${{ matrix.ansible-version }}, python ${{ matrix.python_version }})"
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
