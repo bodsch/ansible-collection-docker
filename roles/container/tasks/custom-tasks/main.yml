@@ -30,10 +30,10 @@
     - name: assert missing pre task
       ansible.builtin.assert:
         that:
-          - _pre_task_available.results | files_available | count == container_pre_tasks | count
+          - _pre_task_available.results | bodsch.docker.files_available | count == container_pre_tasks | count
         msg:
           - not all pre tasks are available
-          - missing {{ container_pre_tasks | difference(_pre_task_available.results | files_available) }}
+          - missing {{ container_pre_tasks | difference(_pre_task_available.results | bodsch.docker.files_available) }}
         quiet: true
 
 - name: validate post tasks
@@ -56,10 +56,10 @@
     - name: assert missing post task
       ansible.builtin.assert:
         that:
-          - _post_task_available.results | files_available | count == container_post_tasks | count
+          - _post_task_available.results | bodsch.docker.files_available | count == container_post_tasks | count
         msg:
           - not all pre tasks are available
-          - missing {{ container_post_tasks | difference(_post_task_available.results | files_available) }}
+          - missing {{ container_post_tasks | difference(_post_task_available.results | bodsch.docker.files_available) }}
         quiet: true
 
 ...
