@@ -2,7 +2,7 @@
 
 - name: launch containers
   ansible.builtin.debug:
-    msg: "{{ container_to_launch | container_names }}"
+    msg: "{{ container_to_launch | bodsch.docker.container_names }}"
 
 - name: launch container
   ansible.builtin.include_tasks: launch_for_older_ansible.yml

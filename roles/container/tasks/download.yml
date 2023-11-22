@@ -17,7 +17,7 @@
 - name: update needed | true  # noqa no-handler
   ansible.builtin.set_fact:
     container_update_needed: true
-    container_changed: "{{ _container_images_information_pulled | changed }}"
+    container_changed: "{{ _container_images_information_pulled | bodsch.docker.changed }}"
   when:
     - _container_images_information_pulled.changed
   tags:
@@ -44,7 +44,7 @@
 
 - name: update container for recreate running docker instance
   ansible.builtin.set_fact:
-    container: "{{ container | update(container_changed) }}"
+    container: "{{ container | bodsch.docker.update(container_changed) }}"
   when:
     - container_update_needed
   tags:

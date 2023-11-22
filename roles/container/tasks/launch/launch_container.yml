@@ -50,7 +50,7 @@
     memory_reservation: "{{ item.memory_reservation | default(omit) }}"
     memory_swap: "{{ item.memory_swap | default(omit) }}"
     memory_swappiness: "{{ item.memory_swappiness | default(omit) }}"
-    mounts: "{{ item.mounts | default([]) | remove_source_handling }}"
+    mounts: "{{ item.mounts | default([]) | bodsch.docker.remove_source_handling }}"
     network_mode: "{{ item.network_mode | default('bridge') }}"
     networks: "{{ item.networks | default(omit) }}"
     networks_cli_compatible: "{{ item.networks_cli_compatible | default(omit) }}"
@@ -74,7 +74,7 @@
     tmpfs: "{{ item.tmpfs | default(omit) }}"
     ulimits: "{{ item.ulimits | default(omit) }}"
     user: "{{ item.user | default(omit) }}"
-    volumes: "{{ item.volumes | default([]) | remove_custom_fields }}"
+    volumes: "{{ item.volumes | default([]) | bodsch.docker.remove_custom_fields }}"
     volumes_from: "{{ item.volumes_from | default([]) }}"
     working_dir: "{{ item.working_dir | default(omit) }}"
   register: create_container_instances
@@ -87,8 +87,8 @@
 
 - name: define container states
   ansible.builtin.set_fact:
-    changed: "{{ create_container_instances | reporting('changed') }}"
-    failed: "{{ create_container_instances | reporting('failed') }}"
+    changed: "{{ create_container_instances | bodsch.docker.reporting('changed') }}"
+    failed: "{{ create_container_instances | bodsch.docker.reporting('failed') }}"
 
 - name: reporting changes
   ansible.builtin.debug:

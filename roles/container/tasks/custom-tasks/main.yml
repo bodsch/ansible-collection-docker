@@ -21,7 +21,6 @@
       ansible.builtin.stat:
         path: "{{ item }}"
         get_checksum: false
-        get_checksum: false
         get_mime: false
         get_attributes: false
       register: _pre_task_available
@@ -46,7 +45,6 @@
     - name: ensure post tasks are available
       ansible.builtin.stat:
         path: "{{ item }}"
-        get_checksum: false
         get_checksum: false
         get_mime: false
         get_attributes: false

@@ -36,7 +36,7 @@
     memory_reservation: "{{ item.memory_reservation | default(omit) }}"
     memory_swap: "{{ item.memory_swap | default(omit) }}"
     memory_swappiness: "{{ item.memory_swappiness | default(omit) }}"
-    mounts: "{{ item.mounts | default([]) | remove_source_handling }}"
+    mounts: "{{ item.mounts | default([]) | bodsch.docker.remove_source_handling }}"
     network_mode: "{{ item.network_mode | default('bridge') }}"
     # ansible 2.10
     # container_default_behavior: "compatibility"
@@ -52,7 +52,7 @@
     restart_retries: "{{ item.restart_retries | default(omit) }}"
     state: "{{ item.state | default('started') }}"
     ulimits: "{{ item.ulimits | default(omit) }}"
-    volumes: "{{ item.volumes | default([]) | remove_custom_fields }}"
+    volumes: "{{ item.volumes | default([]) | bodsch.docker.remove_custom_fields }}"
     volumes_from: "{{ item.volumes_from | default([]) }}"
   register: create_container_instances
   ignore_errors: true
@@ -65,7 +65,7 @@
 
 - name: reporting changes
   ansible.builtin.debug:
-    msg: "{{ create_container_instances.results | selectattr('changed', 'equalto', True) | reporting }}"
+    msg: "{{ create_container_instances.results | selectattr('changed', 'equalto', True) | bodsch.docker.reporting }}"
   when:
     - container_reporting_changes
   tags:
@@ -73,7 +73,7 @@
 
 - name: failed changes
   ansible.builtin.debug:
-    msg: "{{ create_container_instances.results | selectattr('failed', 'equalto', True) | reporting }}"
+    msg: "{{ create_container_instances.results | selectattr('failed', 'equalto', True) | bodsch.docker.reporting }}"
   when:
     - container_reporting_changes
   tags:
