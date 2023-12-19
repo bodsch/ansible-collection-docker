@@ -56,6 +56,7 @@ RETURN = """
 
 # ---------------------------------------------------------------------------------------
 
+
 class DockerClientConfigs(object):
     """
     """
@@ -229,7 +230,7 @@ class DockerClientConfigs(object):
             **formats
         }
 
-        tmp_file     = os.path.join(self.tmp_directory, f"client_{hashed_dest}")
+        tmp_file = os.path.join(self.tmp_directory, f"client_{hashed_dest}")
 
         self.__write_config(tmp_file, data)
         new_checksum = self.checksum.checksum_from_file(tmp_file)
@@ -362,7 +363,7 @@ class DockerClientConfigs(object):
     def __validate_auth(self, data):
         """
         """
-        auth     = data.get("auth", None)
+        auth = data.get("auth", None)
         username = data.get("username", None)
         password = data.get("password", None)
 
@@ -395,7 +396,7 @@ class DockerClientConfigs(object):
     def __base64_auth(self, data):
         """
         """
-        auth     = data.get("auth", None)
+        auth = data.get("auth", None)
         username = data.get("username", None)
         password = data.get("password", None)
 

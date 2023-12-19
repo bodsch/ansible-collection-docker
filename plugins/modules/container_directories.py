@@ -33,6 +33,7 @@ RETURN = """
 
 # ---------------------------------------------------------------------------------------
 
+
 class ContainerDirectories(object):
     """
     """
@@ -106,7 +107,7 @@ class ContainerDirectories(object):
 
         current_owner = None
         current_group = None
-        current_mode  = None
+        current_mode = None
 
         res[directory] = {}
 

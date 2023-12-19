@@ -93,7 +93,7 @@ class ContainerEnvironments(object):
             """
             """
             name = c.get("name")
-            environments  = c.get("environments", {})
+            environments = c.get("environments", {})
             properties = c.get("properties", {})
             property_files = c.get("property_files", [])
             defined_environments = (len(environments) > 0)
@@ -191,8 +191,8 @@ class ContainerEnvironments(object):
         tmp_directory = os.path.join(self.tmp_directory, container_name)
 
         checksum_file = os.path.join(self.base_directory, container_name, "container.env.checksum")
-        data_file     = os.path.join(self.base_directory, container_name, "container.env")
-        difference    = ""
+        data_file = os.path.join(self.base_directory, container_name, "container.env")
+        difference = ""
 
         if os.path.exists(checksum_file):
             os.remove(checksum_file)
@@ -200,7 +200,7 @@ class ContainerEnvironments(object):
         """
             write temporary file and generate checksum
         """
-        tmp_file     = os.path.join(tmp_directory, f"{container_name}.env")
+        tmp_file = os.path.join(tmp_directory, f"{container_name}.env")
         self.__write_template("environments", environments, tmp_file)
         new_checksum = self.checksum.checksum_from_file(tmp_file)
 
@@ -224,8 +224,8 @@ class ContainerEnvironments(object):
         tmp_directory = os.path.join(self.tmp_directory, container_name)
 
         checksum_file = os.path.join(self.base_directory, container_name, f"{property_filename}.checksum")
-        data_file     = os.path.join(self.base_directory, container_name, property_filename)
-        difference    = ""
+        data_file = os.path.join(self.base_directory, container_name, property_filename)
+        difference = ""
 
         if os.path.exists(checksum_file):
             os.remove(checksum_file)
@@ -236,7 +236,7 @@ class ContainerEnvironments(object):
 
             return False, difference
 
-        tmp_file     = os.path.join(tmp_directory, property_filename)
+        tmp_file = os.path.join(tmp_directory, property_filename)
         self.__write_template("properties", properties, tmp_file)
         new_checksum = self.checksum.checksum_from_file(tmp_file)
 

@@ -38,6 +38,7 @@ RETURN = """
 
 # ---------------------------------------------------------------------------------------
 
+
 class DockerCommonConfig(object):
     """
     """
@@ -142,7 +143,7 @@ class DockerCommonConfig(object):
         data = self.config_opts()
 
         create_directory(directory=self.tmp_directory, mode="0750")
-        tmp_file     = os.path.join(self.tmp_directory, "daemon.json")
+        tmp_file = os.path.join(self.tmp_directory, "daemon.json")
         self.__write_config(tmp_file, data)
         new_checksum = checksum.checksum_from_file(tmp_file)
         old_checksum = checksum.checksum_from_file(self.config_file)
@@ -439,7 +440,7 @@ class DockerCommonConfig(object):
             self.module.log(msg=f"{error}")
 
         if installed_plugin_name and installed_plugin_version:
-            msg  = f"plugin {installed_plugin_shortname} is installed in version '{installed_plugin_version}'"
+            msg = f"plugin {installed_plugin_shortname} is installed in version '{installed_plugin_version}'"
 
             if self.log_driver == installed_plugin_name:
                 plugin_valid = True

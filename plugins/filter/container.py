@@ -68,20 +68,20 @@ class FilterModule():
                 if cont:
                     name = cont.get('Name').strip("/")
                     # display.vv("found: {}".format(name))
-                    image         = cont.get('Config').get('Image')
-                    created       = cont.get('Created')
+                    image = cont.get('Config').get('Image')
+                    created = cont.get('Created')
                 elif item:
                     name = item.get('name')
                     # display.vv("found: {}".format(name))
-                    image         = item.get('image')
-                    created       = "None"
+                    image = item.get('image')
+                    created = "None"
                 else:
                     pass
             else:
                 pass
 
-            registry      = image.split('/')[0]
-            container     = image.split('/')[1].split(':')[0]
+            registry = image.split('/')[0]
+            container = image.split('/')[1].split(':')[0]
             container_tag = image.split(':')[1]
 
             seen[name] = {
@@ -106,8 +106,8 @@ class FilterModule():
                 name = e.get('name')
                 image = e.get('image')
 
-                registry      = image.split('/')[0]
-                container     = image.split('/')[1].split(':')[0]
+                registry = image.split('/')[0]
+                container = image.split('/')[1].split(':')[0]
                 container_tag = image.split(':')[1]
 
                 _dict[name] = {
@@ -128,7 +128,7 @@ class FilterModule():
             if (k not in right_dict):
                 result[k] = l_dict
             else:
-                left  = json.dumps(l_dict, sort_keys=True)
+                left = json.dumps(l_dict, sort_keys=True)
                 right = json.dumps(r_dict, sort_keys=True)
 
                 if (left != right):
@@ -213,7 +213,7 @@ class FilterModule():
 
         result = []
         _defaults_present = ['started', 'present']
-        _defaults_absent  = ['stopped', 'absent']
+        _defaults_absent = ['stopped', 'absent']
         state_filter = []
 
         if state in _defaults_present:
@@ -224,7 +224,7 @@ class FilterModule():
         for i in data:
             if isinstance(i, dict):
                 _state = i.get('state', 'started')
-                image  = i.get(return_value, None)
+                image = i.get(return_value, None)
 
                 if _state in state_filter:
                     if image:
@@ -252,7 +252,7 @@ class FilterModule():
         for i in data:
             if isinstance(i, dict):
                 changed = i.get('changed', False)
-                item    = i.get('item', None)
+                item = i.get('item', None)
 
                 if changed:
                     result.append(item)
@@ -271,7 +271,7 @@ class FilterModule():
         for i in data:
             if isinstance(i, dict):
                 changed = i.get('changed', False)
-                item    = i.get('item', {}).get('name', None)
+                item = i.get('item', {}).get('name', None)
 
                 if changed:
                     result.append(item)
@@ -350,7 +350,7 @@ class FilterModule():
             values = v.split(':')
             count = len(values)
 
-            local_volume  = values[0]
+            local_volume = values[0]
             remote_volume = values[1]
 
             if not (

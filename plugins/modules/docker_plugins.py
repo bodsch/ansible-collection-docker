@@ -35,6 +35,7 @@ RETURN = """
 
 # ---------------------------------------------------------------------------------------
 
+
 class DockerPlugins():
     """
       Main Class to implement the installation of docker plugins
@@ -180,7 +181,7 @@ class DockerPlugins():
         )
 
         if installed_plugin_name and installed_plugin_version:
-            msg  = f"plugin {installed_plugin_shortname} is installed in version '{installed_plugin_version}'"
+            msg = f"plugin {installed_plugin_shortname} is installed in version '{installed_plugin_version}'"
 
             if self.plugin_version == installed_plugin_version:
                 self.__write_plugin_information(self.installed_plugin_data)

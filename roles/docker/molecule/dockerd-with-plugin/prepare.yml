@@ -44,6 +44,6 @@
     NETRC: ''
 
   roles:
-    - role: loki
+    - role: bodsch.grafana.loki
 
 ...

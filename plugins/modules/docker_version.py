@@ -34,6 +34,7 @@ RETURN = """
 
 # ---------------------------------------------------------------------------------------
 
+
 class DockerVersion():
     """
       Main Class to implement the installation of docker plugins
