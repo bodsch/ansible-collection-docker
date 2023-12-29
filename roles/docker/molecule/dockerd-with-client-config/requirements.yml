@@ -1,7 +1,0 @@
----
-
-- name: snakeoil
-  src: https://github.com/bodsch/ansible-snakeoil
-  version: 1.5.0
-
-...
