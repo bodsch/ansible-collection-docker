@@ -3,7 +3,7 @@
 namespace: bodsch
 name: docker
 
-version: 0.9.2
+version: 1.0.0
 
 readme: README.md
 
