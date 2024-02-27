@@ -50,4 +50,4 @@
   gather_facts: true
 
   roles:
-    - role: docker
+    - role: bodsch.docker.docker

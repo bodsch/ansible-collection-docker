@@ -9,6 +9,6 @@
     NETRC: ''
 
   roles:
-    - role: ansible-container
+    - role: bodsch.docker.container
 
 ...

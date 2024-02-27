@@ -58,7 +58,7 @@
   gather_facts: true
 
   roles:
-    - role: ansible-container
+    - role: bodsch.docker.container
       vars:
         container:
           - name: hello-world
