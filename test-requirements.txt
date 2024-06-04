@@ -2,12 +2,11 @@ ansible-lint
 docker
 dnspython
 flake8
-molecule>=5.0.1
+molecule
 molecule-plugins[docker]
 netaddr
-pytest
+pytest>=7.4.0,<8.0.0
 pytest-testinfra
 tox
 tox-gh-actions
 yamllint
-jmespath
