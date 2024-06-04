@@ -3,7 +3,6 @@
 docker_dependencies:
   - iproute2
   - python-pip
-  # - python-virtualenv
   - python-certifi
   - python-idna
   - python-charset-normalizer
@@ -11,9 +10,9 @@ docker_dependencies:
   - python-packaging
   - python-urllib3
   - python-requests
-  - python-docker
 
-docker_defaults_python_packages: []
+docker_defaults_python_packages:
+  - name: docker
 
 docker_packages:
   - docker
