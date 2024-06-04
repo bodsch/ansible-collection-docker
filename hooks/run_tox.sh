@@ -37,7 +37,7 @@ else
       do
         export TOX_SCENARIO=${test}
 
-        tox "${TOX_OPTS}" -- molecule ${TOX_TEST} ${TOX_ARGS}
+        tox "${TOX_OPTS}" -- molecule --verbose ${TOX_TEST} ${TOX_ARGS}
       done
     fi
 

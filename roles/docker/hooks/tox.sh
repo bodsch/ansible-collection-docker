@@ -2,6 +2,8 @@
 
 . hooks/molecule.rc
 
+set -x
+
 TOX_TEST="${1}"
 
 if [ -f "./collections.yml" ]
@@ -49,4 +51,4 @@ then
   echo ""
 fi
 
-tox ${TOX_OPTS} -- molecule ${TOX_TEST} ${TOX_ARGS}
+tox ${TOX_OPTS} -- molecule --verbose ${TOX_TEST} ${TOX_ARGS}
