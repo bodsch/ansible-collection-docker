@@ -93,7 +93,6 @@ jobs:
       matrix:
         image:
           - debian:12
-          - debian:latest
         ansible-version:
           - '6.7'
         python_version:
