@@ -98,10 +98,6 @@ jobs:
               -e DISTRIBUTION="${{ matrix.image }}" \
               -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
               -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
-        env:
-          PY_COLORS: '1'
-          ANSIBLE_FORCE_COLOR: '1'
-          DISTRIBUTION: ${{ matrix.image }}
 
   ubuntu:
     name: "${{ matrix.image }} / ${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
@@ -155,10 +151,6 @@ jobs:
               -e DISTRIBUTION="${{ matrix.image }}" \
               -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
               -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
-        env:
-          PY_COLORS: '1'
-          ANSIBLE_FORCE_COLOR: '1'
-          DISTRIBUTION: ${{ matrix.image }}
 
   scenarios:
     name: "${{ matrix.image }} / ${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
@@ -216,4 +208,3 @@ jobs:
               -e DISTRIBUTION="${{ matrix.image }}" \
               -e COLLECTION_ROLE="${{ matrix.collection_role }}" \
               -e COLLECTION_SCENARIO="${{ matrix.scenario }}"
-
