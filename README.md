@@ -15,7 +15,7 @@ Documentation for the collection.
 [docker]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/docker.yml
 [container]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/container.yml
 [registry]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry.yml
-[registry_ui]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry_ui.yml
+[registry_ui]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry-ui.yml
 
 ## Modules
 
