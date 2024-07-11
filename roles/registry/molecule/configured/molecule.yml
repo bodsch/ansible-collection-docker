@@ -8,12 +8,6 @@ dependency:
 driver:
   name: docker
 
-lint: |
-  set -e
-  yamllint .
-  ansible-lint .
-  flake8 .
-
 platforms:
   - name: instance
     image: "bodsch/ansible-${DISTRIBUTION:-debian:12}"

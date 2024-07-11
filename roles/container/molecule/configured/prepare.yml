@@ -40,7 +40,6 @@
       ansible.builtin.package:
         update_cache: true
 
-
     - name: environment
       ansible.builtin.debug:
         msg:

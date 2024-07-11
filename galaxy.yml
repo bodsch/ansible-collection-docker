@@ -23,7 +23,7 @@ tags:
   - container
 
 dependencies:
-  bodsch.core: ">=1.1.4"
+  bodsch.core: ">=2.2.1"
   bodsch.scm: "*"
 
 repository: https://github.com/bodsch/ansible-collection-docker
