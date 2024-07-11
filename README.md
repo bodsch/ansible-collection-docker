@@ -4,12 +4,18 @@ Documentation for the collection.
 
 ## Roles
 
-| Role                                                       |       | Description |
+| Role                                                       | Build State | Description |
 |:---------------------------------------------------------- | :---- | :---- |
-| [bodsch.docker.docker](./roles/docker/README.md)           |       |       |
-| [bodsch.docker.container](./roles/container/README.md)     |       |       |
-| [bodsch.docker.registry](./roles/registry/README.md)       |       |       |
-| [bodsch.docker.registry_ui](./roles/registry_ui/README.md) |       |       |
+| [bodsch.docker.docker](./roles/docker/README.md)           | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/docker.yml?branch=main)][docker] | This role will fully configure and install [dockerd](https://www.docker.com/). |
+| [bodsch.docker.container](./roles/container/README.md)     | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/container.yml?branch=main)][container] | Ansible role for deployment of generic container applications. |
+| [bodsch.docker.registry](./roles/registry/README.md)       | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/registry.yml?branch=main)][registry] | Ansible role to install and configure container [registry](https://github.com/distribution/distribution). |
+| [bodsch.docker.registry_ui](./roles/registry_ui/README.md) | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/registry_ui.yml?branch=main)][registry_ui] | Ansible role for installing and configuring [registry-ui](https://github.com/Quiq/docker-registry-ui)  |
+
+
+[docker]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/docker.yml
+[container]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/container.yml
+[registry]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry.yml
+[registry_ui]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry_ui.yml
 
 ## Modules
 
