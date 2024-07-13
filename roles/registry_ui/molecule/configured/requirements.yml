@@ -2,6 +2,7 @@
 
 - name: nginx
   src: bodsch.nginx
+  version: 0.27.0
 
 - name: redis
   src: bodsch.redis

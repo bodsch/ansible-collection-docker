@@ -3,30 +3,8 @@
 nginx_events:
   multi_accept: true
 
-nginx_gzip:
-  enabled: true
-
-nginx_logformat:
-  json_combined:
-    format: |
-      '{'
-        '"time_local": "$time_local",'
-        '"remote_addr": "$remote_addr",'
-        '"remote_user": "$remote_user",'
-        '"request": "$request",'
-        '"status": "$status",'
-        '"body_bytes_sent": "$body_bytes_sent",'
-        '"request_time": "$request_time",'
-        '"http_referrer": "$http_referer",'
-        '"http_user_agent": "$http_user_agent"'
-      '}';
-    # escape: json
-
 # The client_max_body_size parameter is now set to 16384m, making the maximum upload size equal to 16GB.
 nginx_http:
-  rewrite_log: true
-  client_max_body_size: 16384m
-
   extra_options: |
     ## Set a variable to help us decide if we need to add the
     ## 'Docker-Distribution-Api-Version' header.
@@ -36,7 +14,6 @@ nginx_http:
     map $upstream_http_docker_distribution_api_version $docker_distribution_api_version {
       '' 'registry/2.0';
     }
-
 
 nginx_custom_includes:
   registry.conf: |
@@ -53,7 +30,6 @@ nginx_custom_includes:
     auth_basic           "Administrator’s Area";
     auth_basic_user_file "{{ htpasswd_credentials_path }}/.admin-passwdfile";
 
-
 nginx_vhosts:
   - name: registry
     filename: 00-registry.conf
@@ -64,13 +40,8 @@ nginx_vhosts:
       - registry.molecule.lan
       - molecule.molecule.lan
 
-    # creates also an HTTP vhost only for redirect to HTTPS
-    #redirect:
-    #  from_port: 80
-
     listen:
       - "80"
-      # - "443 ssl http2"
 
     upstreams:
       - name: registry
@@ -90,13 +61,6 @@ nginx_vhosts:
       error:
         file: /var/log/nginx/registry.molecule.lan/error.log
         loglevel: notice
-
-    # # enable ssl
-    # ssl:
-    #   enabled: false
-    #   certificate: /etc/snakeoil/matrix.lan/matrix.lan.crt
-    #   certificate_key: /etc/snakeoil/matrix.lan/matrix.lan.key
-    #   dhparam: /etc/snakeoil/matrix.lan/dh.pem
 
     locations:
       "/metrics":
