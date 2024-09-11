@@ -55,6 +55,7 @@ def test_directory(host, get_vars):
     assert dir.exists
     assert dir.is_directory
 
+
 @pytest.mark.parametrize("directories", [
     "/tmp/busybox-2",
     # mounts
@@ -64,6 +65,7 @@ def test_directory(host, get_vars):
 def test_volumes_directories(host, directories):
     dir = host.file(directories)
     assert dir.is_directory
+
 
 @pytest.mark.parametrize("directories", [
     "/tmp/busybox-1",
