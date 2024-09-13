@@ -3,17 +3,30 @@
 nginx_events:
   multi_accept: true
 
+nginx_gzip:
+  enabled: false
+
 # The client_max_body_size parameter is now set to 16384m, making the maximum upload size equal to 16GB.
 nginx_http:
-  extra_options: |
-    ## Set a variable to help us decide if we need to add the
-    ## 'Docker-Distribution-Api-Version' header.
-    ## The registry always sets this header.
-    ## In the case of nginx performing auth, the header is unset
-    ## since nginx is auth-ing before proxying.
-    map $upstream_http_docker_distribution_api_version $docker_distribution_api_version {
-      '' 'registry/2.0';
-    }
+  client:                                                 #
+    max_body_size: "1G"
+  maps:
+    - name: upstream_http_docker_distribution_api_version
+      description: |
+        ## Set a variable to help us decide if we need to add the
+        ## 'Docker-Distribution-Api-Version' header.
+        ## The registry always sets this header.
+        ## In the case of nginx performing auth, the header is unset
+        ## since nginx is auth-ing before proxying.
+      variable: docker_distribution_api_version
+      mapping:
+        - source: ""
+          result: "registry/2.0"
+
+  includes:
+    - includes.d/useragent.rules
+    - includes.d/proxy_cache.rules
+    - sites-enabled/*.conf
 
 nginx_custom_includes:
   registry.conf: |
