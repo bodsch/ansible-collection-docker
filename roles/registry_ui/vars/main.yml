@@ -25,12 +25,63 @@ registry_ui_defaults_listen:
 
 registry_ui_defaults_base_path: /ui
 
+registry_ui_defaults_performance:
+  catalog_page_size: 100
+  catalog_refresh_interval: 10
+  tags_count_refresh_interval: 60
+
 registry_ui_defaults_registry:
-  url: https://docker-registry.local:5000
-  verify_tls: true
-  username: ""  #  user
-  password: ""  #  pass
-  password_file: ""  #  /run/secrets/registry_password_file
+  hostname: docker-registry.local
+  insecure: false
+  username: ""
+  password: ""
+  password_file: ""
+  auth_with_keychain: ""              # false
+
+registry_ui_defaults_access_control:
+  # Whether users can the event log. Otherwise, only admins listed below.
+  anyone_can_view_events: true
+  # Whether users can delete tags. Otherwise, only admins listed below.
+  anyone_can_delete_tags: false
+  # The list of users to do everything.
+  # User identifier should be set via X-WEBAUTH-USER header from your proxy
+  # because registry UI itself does not employ any auth.
+  admins: []
+
+registry_ui_defaults_event_listener:
+  bearer_token: ""
+  retention_days: 7
+  database:
+    driver: sqlite3     #  sqlite3 or mysql
+    location: ""
+    username: ""
+    password: ""
+    hostname: 127.0.0.1:3306
+    schemaname: docker_events
+  deletion_enabled: true
+
+registry_ui_defaults_purge_tags:
+  # How many days to keep tags but also keep the minimal count provided no matter how old.
+  keep_days: 90
+  keep_count: 10
+  # Keep tags matching regexp no matter how old, e.g. '^latest$'
+  # Empty string disables this feature.
+  keep_regexp: ''
+  # Keep tags listed in the file no matter how old.
+  # File format is JSON: {"repo1": ["tag1", "tag2"], "repoX": ["tagX"]}
+  # Empty string disables this feature.
+  keep_from_file: ''
+
+registry_ui_defaults_debug:
+  # Affects only templates.
+  templates: false
+
+# registry_ui_defaults_registry:
+#   url: https://docker-registry.local:5000
+#   verify_tls: true
+#   username: ""  #  user
+#   password: ""  #  pass
+#   password_file: ""  #  /run/secrets/registry_password_file
 
 registry_ui_defaults_event:
   listener_token: ""  #  token
@@ -63,8 +114,15 @@ registry_ui_defaults_purge:
 
 # ----------------------------------------------------------------------------------------
 
-registry_ui_archive: "registry-ui-{{ registry_ui_version }}-{{ ansible_facts.system }}-{{ system_architecture }}.tar.gz"
-registry_ui_checksum_url: "{{ registry_ui_release_download_url }}/download/{{ registry_ui_version }}/{{ registry_ui_archive }}.sha256"
+registry_ui_defaults_release:
+  # https://github.com/oliver006/redis_exporter/releases/download/v1.56.0/redis_exporter-v1.56.0.linux-amd64.tar.gz
+  download_url: https://github.com/bodsch/docker-registry-ui/releases
+  file: registry-ui-{{ registry_ui_version }}-{{ ansible_facts.system | lower }}-{{ system_architecture }}.tar.gz
+  # checksum_file: "{{ registry_ui_release_download_url }}/download/{{ registry_ui_version }}/{{ registry_ui_archive }}.sha256"
+  binary: registry-ui
+
+# registry_ui_archive: "registry-ui-{{ registry_ui_version }}-{{ ansible_facts.system }}-{{ system_architecture }}.tar.gz"
+# : "{{ registry_ui_release_download_url }}/download/{{ registry_ui_version }}/{{ registry_ui_archive }}.sha256"
 
 registry_ui_defaults_directory: /etc/default
 

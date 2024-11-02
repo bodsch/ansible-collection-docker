@@ -1,5 +1,21 @@
 ---
 
+- name: merge registry configuration between defaults and custom
+  ansible.builtin.set_fact:
+    registry_ui_service: "{{ registry_ui_defaults_service | combine(registry_ui_service, recursive=True) }}"
+    registry_ui_listen: "{{ registry_ui_defaults_listen | combine(registry_ui_listen, recursive=True) }}"
+    registry_ui_performance: "{{ registry_ui_defaults_performance | combine(registry_ui_performance, recursive=True) }}"
+    registry_ui_registry: "{{ registry_ui_defaults_registry | combine(registry_ui_registry, recursive=True) }}"
+    registry_ui_access_control: "{{ registry_ui_defaults_access_control | combine(registry_ui_access_control, recursive=True) }}"
+    registry_ui_event_listener: "{{ registry_ui_defaults_event_listener | combine(registry_ui_event_listener, recursive=True) }}"
+    registry_ui_purge_tags: "{{ registry_ui_defaults_purge_tags | combine(registry_ui_purge_tags, recursive=True) }}"
+    registry_ui_debug: "{{ registry_ui_defaults_debug | combine(registry_ui_debug, recursive=True) }}"
+    # obsolete
+    registry_ui_event: "{{ registry_ui_defaults_event | combine(registry_ui_event, recursive=True) }}"
+    registry_ui_cache: "{{ registry_ui_defaults_cache | combine(registry_ui_cache, recursive=True) }}"
+    registry_ui_admins: "{{ registry_ui_defaults_admins | combine(registry_ui_admins, recursive=True) }}"
+    registry_ui_purge: "{{ registry_ui_defaults_purge | combine(registry_ui_purge, recursive=True) }}"
+
 - name: create registry-ui configuration directory
   ansible.builtin.file:
     path: "{{ registry_ui_config_dir }}"
@@ -18,7 +34,7 @@
     mode: 0664
   notify:
     - validate config
-    - reload registry-ui
+    - restart registry-ui
 
 - name: restart registry if needed
   ansible.builtin.meta: flush_handlers

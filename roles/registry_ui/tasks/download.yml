@@ -1,53 +1,133 @@
 ---
 
-- name: checksum
-  become: false
+- name: get latest release
   delegate_to: localhost
+  become: false
   run_once: true
+  when:
+    - registry_ui_version == "latest"
   block:
-    - name: get checksum list
-      bodsch.scm.github_checksum:
+    - name: get latest release
+      delegate_to: localhost
+      become: false
+      run_once: true
+      bodsch.scm.github_latest:
         project: bodsch
         repository: docker-registry-ui
-        checksum_file: "{{ registry_ui_archive }}.sha256"
         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        architecture: "{{ ansible_architecture }}"
-        system: "{{ ansible_facts.system }}"
-        version: "{{ registry_ui_version }}"
-      register: _latest_checksum
+      register: _latest_release
 
-    - name: define checksum for {{ go_arch }} architecture
+    - name: re-define registry_ui_version
       ansible.builtin.set_fact:
-        __registry_ui_checksum: "{{ _latest_checksum.checksum }}"
-      when:
-        - _latest_checksum.rc == 0
-        - _latest_checksum.checksum is defined
-        - _latest_checksum.checksum | string | length > 0
+        registry_ui_version: "{{ _latest_release.latest_release }}"
 
-- name: download registry-ui binary archive
+- name: define download information
+  ansible.builtin.set_fact:
+    registry_ui_release: "{{ registry_ui_defaults_release | combine(registry_ui_release, recursive=True) }}"
+
+- name: define delegate instance for download handling
+  ansible.builtin.set_fact:
+    registry_ui_delegate_to: "{{ ansible_host }}"
+    registry_ui_local_tmp_directory: "{{
+        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+        default('/var/cache/ansible/registry-ui', true) }}/{{ registry_ui_version }}"
+  when:
+    - registry_ui_direct_download
+
+- name: create download directory
   become: false
   delegate_to: "{{ registry_ui_delegate_to }}"
   run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
-  ansible.builtin.get_url:
-    url: "{{ registry_ui_release_download_url }}/download/{{ registry_ui_version }}/registry-ui-{{ registry_ui_version }}-{{ ansible_facts.system }}-{{ system_architecture }}.tar.gz"
-    dest: "{{ registry_ui_local_tmp_directory }}/registry-ui-{{ system_architecture }}.tar.gz"
-    checksum: "sha256:{{ __registry_ui_checksum }}"
-    mode: 0660
-  register: _download_archive
-  until: _download_archive is succeeded
-  retries: 5
-  delay: 2
-  check_mode: false
+  ansible.builtin.file:
+    path: "{{ registry_ui_local_tmp_directory }}"
+    state: directory
+    mode: 0750
 
-- name: extract registry-ui archive
+- name: detect the downloaded registry_ui archive
+  become: false
+  delegate_to: "{{ registry_ui_delegate_to }}"
+  run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ registry_ui_local_tmp_directory }}/{{ registry_ui_release.file }}"
+  register: stat_registry_ui_archive
+
+- name: download
+  when:
+    - stat_registry_ui_archive.stat is defined
+    - not stat_registry_ui_archive.stat.exists | default('false')
+  block:
+    - name: checksum
+      become: false
+      delegate_to: localhost
+      run_once: true
+      block:
+        - name: get checksum list
+          bodsch.scm.github_checksum:
+            project: bodsch
+            repository: docker-registry-ui
+            checksum_file: "{{ registry_ui_release.file }}.sha256"
+            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+            architecture: "{{ ansible_architecture }}"
+            system: "{{ ansible_facts.system | lower }}"
+            version: "{{ registry_ui_version }}"
+          register: _latest_checksum
+
+        - name: define checksum for {{ system_architecture }} architecture
+          ansible.builtin.set_fact:
+            __registry_ui_checksum: "sha256:{{ _latest_checksum.checksum }}"
+          when:
+            - _latest_checksum.rc == 0
+            - _latest_checksum.checksum is defined
+            - _latest_checksum.checksum | string | length > 0
+
+    - name: download registry_ui binary archive
+      become: false
+      delegate_to: "{{ registry_ui_delegate_to }}"
+      run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ registry_ui_release.download_url }}/download/{{ registry_ui_version }}/{{ registry_ui_release.file }}"
+        dest: "{{ registry_ui_local_tmp_directory }}/"
+        checksum: "{{ __registry_ui_checksum | default(omit) }}"
+        mode: 0640
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+      check_mode: false
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ registry_ui_delegate_to }}"
+      run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ registry_ui_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect extracted binary
+  become: false
+  delegate_to: "{{ registry_ui_delegate_to }}"
+  run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ registry_ui_local_tmp_directory }}/{{ registry_ui_release.binary }}"
+  register: stat_registry_ui_binary
+
+- name: extract registry_ui archive
   become: false
   delegate_to: "{{ registry_ui_delegate_to }}"
   run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ registry_ui_local_tmp_directory }}/registry-ui-{{ system_architecture }}.tar.gz"
-    dest: "{{ registry_ui_local_tmp_directory }}"
+    src: "{{ registry_ui_local_tmp_directory }}/{{ registry_ui_release.file }}"
+    dest: "{{ registry_ui_local_tmp_directory }}/"
     copy: false
-  register: _extract_archive
+  when:
+    - stat_registry_ui_binary.stat is defined
+    - not stat_registry_ui_binary.stat.exists | default('false')
 
 ...

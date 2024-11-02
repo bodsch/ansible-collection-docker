@@ -1,8 +1,9 @@
 ---
 
-registry_ui_version: 0.9.5
+registry_ui_version: 0.10.3
 
-registry_ui_release_download_url: https://github.com/bodsch/docker-registry-ui/releases
+registry_ui_release:
+  download_url: https://github.com/bodsch/docker-registry-ui/releases
 
 registry_ui_system_user: registry-ui
 registry_ui_system_group: registry-ui
@@ -20,16 +21,26 @@ registry_ui_listen:
 
 registry_ui_base_path: /
 
-registry_ui_debug: false
+registry_ui_performance: {}
 
-registry_ui_registry: {}
+registry_ui_registry:
+  hostname: "127.0.0.1:5000"
+  insecure: true
+  username: admin
+  password: admin
 
+registry_ui_access_control: {}
+
+registry_ui_event_listener: {}
+
+registry_ui_purge_tags: {}
+
+registry_ui_debug: {}
+
+# obsole since version 0.10.x
 registry_ui_event: {}
-
 registry_ui_cache: {}
-
 registry_ui_admins: []
-
 registry_ui_purge: {}
 
 ...

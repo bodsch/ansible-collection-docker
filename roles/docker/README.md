@@ -1,5 +1,5 @@
 
-# Ansible Role:  `docker`
+# Ansible Role:  `bodsch.docker.docker`
 
 This role will fully configure and install [dockerd](https://www.docker.com/).
 
@@ -384,16 +384,3 @@ Advanced playbook with various variables applied
 ```
 ---
 
-## Author and License
-
-- original `docker` role written by:
-  - George Bolo | [linuxctl.com](https://linuxctl.com)
-
-- modified:
-  - Bodo Schulz
-
-## License
-
-MIT
-
-**FREE SOFTWARE, HELL YEAH!**

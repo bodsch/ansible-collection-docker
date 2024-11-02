@@ -1,6 +1,27 @@
 # Ansible Collection - bodsch.docker
 
-Documentation for the collection.
+A collection of Ansible roles for docker Stuff.
+
+
+
+## supported operating systems
+
+* Arch Linux
+* Debian based
+    - Debian 10 / 11
+    - Ubuntu 20.10
+
+## Contribution
+
+Please read [Contribution](CONTRIBUTING.md)
+
+## Development,  Branches (Git Tags)
+
+The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
+
+If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/ansible-collection-prometheus/tags)!
+
+---
 
 ## Roles
 

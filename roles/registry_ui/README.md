@@ -1,19 +1,9 @@
 
-# Ansible Role:  `registry-ui` 
+# Ansible Role:  `bodsch.docker.registry_ui` 
 
 Ansible role for installing and configuring Docker [registry-ui](https://github.com/Quiq/docker-registry-ui) 
 without dependencies on a container.  
 Natively supports systemd and openrc as init system.
-
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-registry-ui/main.yml?branch=main)][ci]
-[![GitHub issues](https://img.shields.io/github/issues/bodsch/ansible-registry-ui)][issues]
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/bodsch/ansible-registry-ui)][releases]
-[![Ansible Quality Score](https://img.shields.io/ansible/quality/50067?label=role%20quality)][quality]
-
-[ci]: https://github.com/bodsch/ansible-registry-ui/actions
-[issues]: https://github.com/bodsch/ansible-registry-ui/issues?q=is%3Aopen+is%3Aissue
-[releases]: https://github.com/bodsch/ansible-registry-ui/releases
-[quality]: https://galaxy.ansible.com/bodsch/registry_ui
 
 If `latest` is set for `registry_ui_version`, the role tries to install the latest release version.  
 **Please use this with caution, as incompatibilities between releases may occur!**
@@ -27,50 +17,143 @@ By default it is `${HOME}/.cache/ansible/registry-ui`.
 If this type of installation is not desired, the download can take place directly on the target system. 
 However, this must be explicitly activated by setting `registry_ui_direct_download` to `true`.
 
-## Requirements & Dependencies
-
-Ansible Collections
-
-- [bodsch.core](https://github.com/bodsch/ansible-collection-core)
-- [bodsch.scm](https://github.com/bodsch/ansible-collection-scm)
-
-```bash
-ansible-galaxy collection install bodsch.core
-ansible-galaxy collection install bodsch.scm
-```
-or
-```bash
-ansible-galaxy collection install --requirements-file collections.yml
-```
-
-## Operating systems
-
-Tested on
-
-* Arch Linux
-* Debian based
-    - Debian 10 / 11
-    - Ubuntu 20.10
-
-## Requirements
-
-Running Docker Registry.
-
-
-## Contribution
-
-Please read [Contribution](CONTRIBUTING.md)
-
-## Development,  Branches (Git Tags)
-
-The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
-
-If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/ansible-registry-ui/tags)!
 
 ## Configuration
 
 > **Please note:** The release of the registry-ui binary is done from a fork and not from the [original](https://github.com/Quiq/docker-registry-ui), because the original repository does not provide a go-binary yet!
 
+**ATTENTION!**
+
+Breaking changes: Since version 0.10, the syntax of the configuration file has changed and is no longer compatible!
+
+Here you can find the current version of the configuration: [https://github.com/bodsch/docker-registry-ui/blob/master/config.yml](config.yml)
+
+```yaml
+registry_ui_version: 0.10.3
+
+registry_ui_release:
+  download_url: https://github.com/bodsch/docker-registry-ui/releases
+
+registry_ui_system_user: registry-ui
+registry_ui_system_group: registry-ui
+registry_ui_config_dir: /etc/registry-ui
+registry_ui_data_dir: /var/lib/registry-ui
+
+registry_ui_direct_download: false
+
+registry_ui_service:
+  log_level: info
+
+registry_ui_listen:
+  address: 127.0.0.1
+  port: 8000
+
+registry_ui_base_path: /
+
+registry_ui_performance: {}
+
+registry_ui_registry:
+  hostname: "127.0.0.1:5000"
+  insecure: true
+  username: admin
+  password: admin
+
+registry_ui_access_control: {}
+
+registry_ui_event_listener: {}
+
+registry_ui_purge_tags: {}
+
+registry_ui_debug: {}
+```
+
+### `registry_ui_listen`
+
+Listen interface and Port
+
+```yaml
+registry_ui_listen:
+  address: 127.0.0.1
+  port: 8000
+```
+
+### `registry_ui_performance`
+
+```yaml
+registry_ui_performance:
+  catalog_page_size: 100
+  catalog_refresh_interval: 10
+  tags_count_refresh_interval: 60
+```
+
+### `registry_ui_registry`
+
+Registry URL without schema and port.
+
+Verify TLS certificate when using https.
+
+Docker registry credentials.  
+They need to have a full access to the registry.  
+If token authentication service is enabled, it will be auto-discovered and those credentials
+will be used to obtain access tokens.  
+When the `password_file` entry is used, the password can be passed as a docker secret
+and read from file. This overides the `password` entry.
+
+```yaml
+registry_ui_registry:
+  hostname: docker-registry.local
+  insecure: false
+  username: ""
+  password: ""
+  password_file: ""
+  auth_with_keychain: ""
+```
+
+
+### `registry_ui_access_control`
+
+```yaml
+registry_ui_access_control:
+  anyone_can_view_events: true
+  anyone_can_delete_tags: false
+  admins: []
+```
+
+### `registry_ui_event_listener`
+
+```yaml
+registry_ui_event_listener:
+  bearer_token: ""
+  retention_days: 7
+  database:
+    driver: sqlite3     #  sqlite3 or mysql
+    location: ""
+    username: ""
+    password: ""
+    hostname: 127.0.0.1:3306
+    schemaname: docker_events
+  deletion_enabled: true
+```
+
+### `registry_ui_purge_tags`
+
+```yaml
+registry_ui_purge_tags:
+  keep_days: 90
+  keep_count: 10
+  keep_regexp: ''
+  keep_from_file: ''
+```
+
+### `registry_ui_debug`
+
+```yaml
+registry_ui_debug:
+  templates: false
+```
+
+
+### OBSOLETE VERSION 0.9.x
 
 ```yaml
 registry_ui_version: 0.9.5
@@ -195,12 +278,3 @@ registry_ui_purge:
 
 ---
 
-## Author and License
-
-- Bodo Schulz
-
-## License
-
-[Apache](LICENSE)
-
-**FREE SOFTWARE, HELL YEAH!**

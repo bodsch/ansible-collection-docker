@@ -3,14 +3,19 @@
 registry_ui_version: latest
 
 registry_ui_service:
-  log_level: info
+  log_level: debug
 
 registry_ui_listen:
   address: 0.0.0.0
   port: 8080
 
 registry_ui_registry:
-  url: http://127.0.0.1:5000
-  verify_tls: false
+  hostname: "127.0.0.1:5000"
+  insecure: true
+  username: admin
+  password: admin
+
+registry_ui_event:
+  listener_token: ""
 
 ...

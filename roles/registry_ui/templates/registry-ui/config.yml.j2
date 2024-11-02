@@ -1,5 +1,8 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
+---
 # {{ ansible_managed }}
+# registry-ui version: {{ registry_ui_version }}
+{# https://github.com/bodsch/docker-registry-ui/blob/master/config.yml #}
 
 {% if registry_ui_listen is defined and
       registry_ui_listen | count > 0 %}
@@ -7,6 +10,193 @@
 listen_addr: {{ registry_ui_listen.address | default('127.0.0.1') }}:{{ registry_ui_listen.port | default('8000') }}
 {% endif %}
 
+{% if registry_ui_version is version("0.10", ">=") %}
+uri_base_path: {{ registry_ui_base_path }}
+{% if registry_ui_performance is defined and
+      registry_ui_performance | count > 0 %}
+
+# Background tasks.
+performance:
+  {% if registry_ui_performance.catalog_page_size is defined and
+        registry_ui_performance.catalog_page_size | string | length > 0 %}
+  # Catalog list page size. It depends from the underlying storage performance.
+  catalog_page_size: {{ registry_ui_performance.catalog_page_size }}
+  {% endif %}
+  {% if registry_ui_performance.catalog_refresh_interval is defined and
+        registry_ui_performance.catalog_refresh_interval | string | length > 0 %}
+  # Catalog (repo list) refresh interval in minutes.
+  # If set to 0 it will never refresh but will run once.
+  catalog_refresh_interval: {{ registry_ui_performance.catalog_refresh_interval }}
+  {% endif %}
+  {% if registry_ui_performance.tags_count_refresh_interval is defined and
+        registry_ui_performance.tags_count_refresh_interval | string | length > 0 %}
+  # Tags counting refresh interval in minutes.
+  # If set to 0 it will never run. This is fast operation.
+  tags_count_refresh_interval: {{ registry_ui_performance.tags_count_refresh_interval }}
+  {% endif %}
+{% endif %}
+{% if registry_ui_registry is defined and
+      registry_ui_registry | count > 0 %}
+
+registry:
+  {% if registry_ui_registry.hostname is defined and
+        registry_ui_registry.hostname | string | length > 0 %}
+  # Registry hostname (without protocol but may include port).
+  hostname: {{ registry_ui_registry.hostname }}
+  {% endif %}
+  {% if registry_ui_registry.insecure is defined and
+        registry_ui_registry.insecure %}
+  # Allow to access non-https enabled registry.
+  insecure: {{ registry_ui_registry.insecure | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+  # Registry credentials.
+  # They need to have a full access to the registry.
+  # If token authentication service is enabled, it will be auto-discovered and those credentials
+  # will be used to obtain access tokens.
+  {% if registry_ui_registry.username is defined and
+        registry_ui_registry.username | string | length > 0 %}
+  username: {{ registry_ui_registry.username }}
+  {% endif %}
+  {% if registry_ui_registry.password is defined and
+        registry_ui_registry.password | string | length > 0 %}
+  password: {{ registry_ui_registry.password }}
+  {% endif %}
+  {% if registry_ui_registry.password_file is defined and
+        registry_ui_registry.password_file | string | length > 0 %}
+  # Set password to '' in order to read it from the file below. Otherwise, it is ignored.
+  password_file: {{ registry_ui_registry.password_file }}
+  {% else %}
+  password_file: ''
+  {% endif %}
+  {% if registry_ui_registry.auth_with_keychain is defined and
+        registry_ui_registry.auth_with_keychain %}
+  # Alternatively, you can do auth with Keychain, useful for local development.
+  # When enabled the above credentials will not be used.
+  auth_with_keychain: {{ registry_ui_registry.auth_with_keychain | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+{% endif %}
+{% if registry_ui_access_control is defined and
+      registry_ui_access_control | count > 0 %}
+
+# UI access management.
+access_control:
+  {% if registry_ui_access_control.anyone_can_view_events is defined and
+        registry_ui_access_control.anyone_can_view_events | string | length > 0 %}
+  # Whether users can the event log. Otherwise, only admins listed below.
+  anyone_can_view_events: {{ registry_ui_access_control.anyone_can_view_events | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+  {% if registry_ui_access_control.anyone_can_delete_tags is defined and
+        registry_ui_access_control.anyone_can_delete_tags | string | length > 0 %}
+  # Whether users can delete tags. Otherwise, only admins listed below.
+  anyone_can_delete_tags: {{ registry_ui_access_control.anyone_can_delete_tags | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+  {% if registry_ui_access_control.admins is defined and
+        registry_ui_access_control.admins | count > 0 %}
+  # The list of users to do everything.
+  # User identifier should be set via X-WEBAUTH-USER header from your proxy
+  # because registry UI itself does not employ any auth.
+  admins: []
+  {% endif %}
+{% endif %}
+{% if registry_ui_event_listener is defined and
+      registry_ui_event_listener | count > 0 %}
+
+# Event listener configuration.
+event_listener:
+  {% if registry_ui_event_listener.bearer_token is defined and
+        registry_ui_event_listener.bearer_token | string | length > 0 %}
+  # The same token should be configured on Docker registry as Authorization Bearer token.
+  bearer_token: xxx
+  {% endif %}
+  {% if registry_ui_event_listener.retention_days is defined and
+        registry_ui_event_listener.retention_days | string | length > 0 %}
+  # Retention of records to keep.
+  retention_days: {{ registry_ui_event_listener.retention_days }}
+  {% endif %}
+  {% if registry_ui_event_listener.database is defined and
+        registry_ui_event_listener.database | count > 0 and
+        registry_ui_event_listener.database.driver is defined and
+        registry_ui_event_listener.database.driver | string | length > 0 %}
+  # Event listener storage.
+  # database_driver: sqlite3
+  # database_location: data/registry_events.db
+  # database_driver: mysql
+  # database_location: user:password@tcp(localhost:3306)/docker_events
+    {% if registry_ui_event_listener.database.driver in ["sqlite3", "mysql"] %}
+      {% if registry_ui_event_listener.database.driver == "sqlite3" %}
+  # Event listener storage.
+  database_driver: sqlite3
+        {% set _database_location = registry_ui_data_dir ~ "/registry_events.db" %}
+        {% if registry_ui_event_listener.database.location is defined and
+              registry_ui_event_listener.database.location | string | length > 0 %}
+          {% set _database_location = registry_ui_event_listener.database.location %}
+        {% endif %}
+  database_location: {{ _database_location }}
+      {% endif %}
+      {% if registry_ui_event_listener.database.driver == "mysql" %}
+  database_driver: mysql
+        {% if registry_ui_event_listener.database.username is defined and
+              registry_ui_event_listener.database.username | string | length > 0 and
+              registry_ui_event_listener.database.password is defined and
+              registry_ui_event_listener.database.password | string | length > 0 %}
+                        # user:password@tcp(localhost:3306)/docker_events
+  database_location: {{ registry_ui_event_listener.database.username }}:{{ registry_ui_event_listener.database.password }}@tcp({{ registry_ui_event_listener.database.hostname | default('127.0.0.1:3306') }})/{{ registry_ui_event_listener.database.schemaname }}
+        {% endif %}
+      {% endif%}
+    {% endif %}
+  {% endif %}
+  {% if registry_ui_event_listener.deletion_enabled is defined and
+        registry_ui_event_listener.deletion_enabled | string | length > 0 %}
+  # You can disable event deletion on some hosts when you are running registry UI on MySQL master-master or
+  # cluster setup to avoid deadlocks or replication breaks.
+  deletion_enabled: {{ registry_ui_event_listener.deletion_enabled | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+{% endif %}
+{% if registry_ui_purge_tags is defined and
+      registry_ui_purge_tags | count > 0 %}
+
+# Options for tag purging.
+purge_tags:
+  {% if registry_ui_purge_tags.keep_days is defined and
+        registry_ui_purge_tags.keep_days | string | length > 0 %}
+  # How many days to keep tags but also keep the minimal count provided no matter how old.
+  keep_days:  {{ registry_ui_purge_tags.keep_days }}
+  {% endif %}
+  {% if registry_ui_purge_tags.keep_count is defined and
+        registry_ui_purge_tags.keep_count | string | length > 0 %}
+  keep_count: 10
+  {% endif %}
+  {% if registry_ui_purge_tags.keep_regexp is defined and
+        registry_ui_purge_tags.keep_regexp | string | length > 0 %}
+  # Keep tags matching regexp no matter how old, e.g. '^latest$'
+  # Empty string disables this feature.
+  keep_regexp: '{{ registry_ui_purge_tags.keep_regexp }}'
+  {% else %}
+  keep_regexp: ''
+  {% endif %}
+  {% if registry_ui_purge_tags.keep_from_file is defined and
+        registry_ui_purge_tags.keep_from_file | string | length > 0 %}
+  # Keep tags listed in the file no matter how old.
+  # File format is JSON: {"repo1": ["tag1", "tag2"], "repoX": ["tagX"]}
+  # Empty string disables this feature.
+  keep_from_file: ''
+  {% else %}
+  keep_from_file: ''
+  {% endif %}
+{% endif %}
+{% if registry_ui_debug is defined and
+      registry_ui_debug | count > 0 %}
+
+# Debug mode.
+debug:
+  {% if registry_ui_debug.templates is defined and
+        registry_ui_debug.templates | string | length > 0 %}
+  # Affects only templates.
+  templates: {{ registry_ui_debug.templates | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+  {% endif %}
+{% endif %}
+
+{% else %}
 {% if registry_ui_base_path is defined and
       registry_ui_base_path | string | length > 0 %}
 # Base path of Docker Registry UI.
@@ -156,4 +346,6 @@ purge_tags_keep_from_file: {{ registry_ui_purge.tags_keep_from_file }}
 # Note, the cron schedule format includes seconds! See https://godoc.org/github.com/robfig/cron
 purge_tags_schedule: "{{ registry_ui_purge.tags_schedule }}"
   {% endif %}
+{% endif %}
+
 {% endif %}

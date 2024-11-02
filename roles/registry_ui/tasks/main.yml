@@ -5,8 +5,6 @@
 
 - name: download
   ansible.builtin.include_tasks: download.yml
-  when:
-    - not stat_registry_ui_binary.stat.exists
 
 - name: install
   ansible.builtin.include_tasks: install.yml

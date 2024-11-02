@@ -1,18 +1,8 @@
 
-# Ansible Role:  `container`
+# Ansible Role:  `bodsch.docker.container`
 
 
 ansible role for docker deployment of generic container applications
-
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-container/main.yml?branch=main)][ci]
-[![GitHub issues](https://img.shields.io/github/issues/bodsch/ansible-container)][issues]
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/bodsch/ansible-container)][releases]
-[![Ansible Quality Score](https://img.shields.io/ansible/quality/50067?label=role%20quality)][quality]
-
-[ci]: https://github.com/bodsch/ansible-container/actions
-[issues]: https://github.com/bodsch/ansible-container/issues?q=is%3Aopen+is%3Aissue
-[releases]: https://github.com/bodsch/ansible-container/releases
-[quality]: https://galaxy.ansible.com/bodsch/container
 
 
 ## Requirements & Dependencies
@@ -30,16 +20,6 @@ or
 ```bash
 ansible-galaxy collection install --requirements-file collections.yml
 ```
-
-
-### Operating systems
-
-Tested on
-
-* Arch Linux
-* Debian based
-    - Debian 10 / 11
-    - Ubuntu 20.10
 
 ## usage
 
@@ -412,43 +392,3 @@ The specification of `owner` and `group` enables the setting of access rights.
 ```
 
 
-## tests
-
-Local tests are executed in a docker container.  
-Note that this container must provide its own docker daemon (*docker-in-docker*).
-
-```bash
-make
-make verify
-make destroy
-```
-
-You can call these tests with different Ansible versions:
-
-```bash
-make -e TOX_ANSIBLE=ansible_6.4
-make destroy -e TOX_ANSIBLE=ansible_6.4
-```
-
-The currently testable Ansible versions are defined in [`tox.ini`](./tox.ini).
-
-
-Below `molecule`, various tests are provided. If none is explicitly specified, `default` is used.  
-To call a special test, you can define it via `-e TOX_SCENARIO=$TEST`.
-
-```bash
-make -e TOX_SCENARIO=multiple-container
-make destroy -e TOX_SCENARIO=multiple-container
-```
-
----
-
-## Author and License
-
-- Bodo Schulz
-
-## License
-
-[Apache](LICENSE)
-
-**FREE SOFTWARE, HELL YEAH!**
