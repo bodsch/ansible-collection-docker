@@ -3,13 +3,54 @@
 A collection of Ansible roles for docker Stuff.
 
 
+## Requirements & Dependencies
+
+- `ruamel.yaml`
+
+```bash
+pip install ruamel.yaml
+```
 
 ## supported operating systems
 
 * Arch Linux
 * Debian based
-    - Debian 10 / 11
-    - Ubuntu 20.10
+    - Debian 10
+    - Debian 11
+    - Debian 12
+    - Ubuntu 20.04
+    - Ubuntu 22.04
+    - Ubuntu 24.04
+
+## Installing this collection
+
+You can install the memsource collection with the Ansible Galaxy CLI:
+
+```bash
+#> ansible-galaxy collection install bodsch.docker
+```
+
+To install directly from GitHub:
+
+```bash
+#> ansible-galaxy collection install git@github.com:bodsch/ansible-collection-docker.git
+```
+
+
+You can also include it in a `requirements.yml` file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
+
+```yaml
+---
+collections:
+  - name: bodsch.docker
+```
+
+The python module dependencies are not installed by `ansible-galaxy`.  They can
+be manually installed using pip:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Contribution
 
@@ -19,7 +60,7 @@ Please read [Contribution](CONTRIBUTING.md)
 
 The `master` Branch is my *Working Horse* includes the "latest, hot shit" and can be complete broken!
 
-If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/ansible-collection-prometheus/tags)!
+If you want to use something stable, please use a [Tagged Version](https://github.com/bodsch/ansible-collection-docker/tags)!
 
 ---
 
@@ -76,3 +117,15 @@ If you want to use something stable, please use a [Tagged Version](https://githu
 | `combine_registries`      |             |
 | `validate_mountpoints`    |             |
 | `validate_log_driver`     |             |
+
+---
+
+## Author
+
+- Bodo Schulz
+
+## License
+
+[Apache](LICENSE)
+
+**FREE SOFTWARE, HELL YEAH!**

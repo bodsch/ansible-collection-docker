@@ -1,8 +1,5 @@
 ---
 
-- name: flush handlers
-  ansible.builtin.meta: flush_handlers
-
 - name: ensure registry-ui is enabled on boot
   become: true
   ansible.builtin.service:

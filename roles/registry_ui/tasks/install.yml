@@ -84,7 +84,7 @@
             - static
             - templates
           notify:
-            - reload registry-ui
+            - restart registry-ui
 
         - name: create link to binary
           ansible.builtin.file:
@@ -119,7 +119,7 @@
         group: "{{ registry_ui_system_group }}"
         mode: 0640
       notify:
-        - reload registry-ui
+        - restart registry-ui
 
     - name: create systemd service unit
       ansible.builtin.template:

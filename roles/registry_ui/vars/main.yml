@@ -33,8 +33,8 @@ registry_ui_defaults_performance:
 registry_ui_defaults_registry:
   hostname: docker-registry.local
   insecure: false
-  username: ""
-  password: ""
+  username: admin
+  password: admin
   password_file: ""
   auth_with_keychain: ""              # false
 
