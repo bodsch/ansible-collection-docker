@@ -2,14 +2,15 @@
 
 docker_dependencies:
   - iproute2
-  - python-pip
   - python-certifi
-  - python-idna
   - python-charset-normalizer
-  - python-websocket-client
+  - python-docker
+  - python-idna
   - python-packaging
-  - python-urllib3
+  - python-pip
   - python-requests
+  - python-urllib3
+  - python-websocket-client
 
 docker_defaults_python_packages:
   - name: docker
