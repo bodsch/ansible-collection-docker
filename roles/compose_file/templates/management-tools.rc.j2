@@ -1,0 +1,57 @@
+#
+
+DOCKER=$(command -v docker)
+
+CMS_IOR_URL="{{ container_cms_ior }}"
+MLS_IOR_URL="{{ container_mls_ior }}"
+WFS_IOR_URL="{{ container_wfs_ior }}"
+
+USER_BLACKLIST="{{ user_blacklist | join(' ') }}"
+
+SKIP_CONTENT="false"
+FORCE_REIMPORT_CONTENT="true"
+FORCE_REIMPORT_THEMES="true"
+
+BLOB_STORAGE_URL=     # "/coremedia/import/content-blobs.zip"
+CONTENT_ARCHIVE_URL="/coremedia/import/content-users.zip"
+THEMES_ARCHIVE_URL="/coremedia/import/frontend.zip"
+
+DOCKER_ADD_HOSTS=
+DOCKER_NETWORK=
+DOCKER_VOLUMES="--volume {{ volumes | default([]) | join(' --volume ') }}"
+DOCKER_LINKS="--link {{ links | default([]) | join(' --link ' ) }}"
+
+{% if networks is defined %}
+{%- set values = [] -%}
+{%- for k in networks -%}
+{{ values.append( k.name ) or "" }}
+{% endfor -%}
+DOCKER_NETWORK="--network {{ values | join(' --network ' ) }}"
+{% endif %}
+
+{% if etc_hosts is defined %}
+{%- set values = [] -%}
+{%- for k,v in etc_hosts.items() -%}
+{{ values.append( k + ':' + v ) or "" }}
+{% endfor -%}
+DOCKER_ADD_HOSTS="--add-host {{ values | join(' --add-host ' ) }}"
+{% endif %}
+
+DOCKER_ENV="--env CMS_IOR_URL="{{ container_cms_ior }}" \
+  --env MLS_IOR_URL="{{ container_mls_ior }}" \
+  --env WFS_IOR_URL="{{ container_wfs_ior }}" \
+  --env CONTENT_ARCHIVE_URL="${CONTENT_ARCHIVE_URL}" \
+  --env THEMES_ARCHIVE_URL="${THEMES_ARCHIVE_URL}" \
+  --env BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" \
+  --env FORCE_REIMPORT_CONTENT="${FORCE_REIMPORT_CONTENT}" \
+  --env FORCE_REIMPORT_THEMES="${FORCE_REIMPORT_THEMES}"
+"
+DOCKER_CONTAINER={{ container }}
+
+# echo "${DOCKER_VOLUMES}"
+# echo "${DOCKER_LINKS}"
+# echo "${DOCKER_NETWORK}"
+# echo "${DOCKER_ADD_HOSTS}"
+# echo "${DOCKER_ENV}"
+
+CONTENT_ARCHIVE="${ENV_DIRECTORY}/management-tools/import/$(basename ${CONTENT_ARCHIVE_URL})"
