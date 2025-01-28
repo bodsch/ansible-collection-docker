@@ -113,6 +113,7 @@ class DockerCommonConfig(object):
             run
         """
         create_directory(self.cache_directory)
+        create_directory("/etc/docker", mode="0750")
 
         checksum = Checksum(self.module)
 
