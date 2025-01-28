@@ -37,6 +37,7 @@ RETURN = """
 class ComposeFiles(object):
     """
     """
+
     def __init__(self, module):
         """
         """
@@ -52,6 +53,7 @@ class ComposeFiles(object):
         )
 
 # ---------------------------------------------------------------------------------------
+
 
 def main():
     """

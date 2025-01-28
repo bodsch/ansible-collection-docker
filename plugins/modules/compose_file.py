@@ -7,6 +7,8 @@
 
 from __future__ import absolute_import, division, print_function
 import os
+import shutil
+import yaml
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory, current_state
@@ -36,9 +38,10 @@ RETURN = """
 # ---------------------------------------------------------------------------------------
 
 
-class ComposeFile(object):
+class ModuleComposeFile(object):
     """
     """
+
     def __init__(self, module):
         """
         """
@@ -63,15 +66,38 @@ class ComposeFile(object):
             msg="initial"
         )
 
+        create_directory(directory=self.tmp_directory, mode="0750")
+
         if not os.path.isdir(self.base_directory):
             create_directory(directory=self.base_directory, mode="0755")
 
         self.checksum = Checksum(self.module)
+        self.composeFile = ComposeFile(self.module)
 
+        compose_data = self.composeFile.create(self.version, self.networks, self.services)
+
+        # self.module.log(msg=f"{compose_data}")
+
+        file_name = os.path.join(self.base_directory, self.compose_filename)
+        tmp_file_name = os.path.join(self.tmp_directory, self.compose_filename)
+
+        with open(tmp_file_name, "w") as f:
+            yaml.dump(compose_data, f)
+
+        if os.path.exists(file_name) and os.path.exists(tmp_file_name):
+            """
+                validate
+            """
+            pass
+
+        shutil.move(tmp_file_name, file_name)
+
+        shutil.rmtree(self.tmp_directory)
 
         return result
 
 # ---------------------------------------------------------------------------------------
+
 
 def main():
     """
@@ -104,7 +130,7 @@ def main():
         supports_check_mode=True,
     )
 
-    p = ComposeFile(module)
+    p = ModuleComposeFile(module)
     result = p.run()
 
     module.log(msg=f"= result: {result}")

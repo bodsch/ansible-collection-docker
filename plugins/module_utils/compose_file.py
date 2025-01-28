@@ -5,4 +5,32 @@
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
 # SPDX-License-Identifier: Apache-2.0
 
-import os
+from __future__ import absolute_import, division, print_function
+
+# import os
+
+
+class ComposeFile:
+    """
+    """
+
+    def __init__(self, module):
+        self.module = module
+
+    def create(self, version=None, networks={}, services={}):
+        """
+        """
+        self.module.log(msg=f"ComposeFile::create()")
+
+        result = dict()
+
+        if version:
+            result["version"] = version
+
+        if networks:
+            result["network"] = networks
+
+        if services:
+            result["services"] = services
+
+        return result
