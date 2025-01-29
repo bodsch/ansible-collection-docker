@@ -13,6 +13,7 @@ import ruamel.yaml
 
 from ansible_collections.bodsch.core.plugins.module_utils.checksum import Checksum
 
+
 class ComposeFile:
     """
     """

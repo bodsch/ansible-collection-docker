@@ -46,6 +46,7 @@ class ModuleComposeFile(object):
         """
         """
         self.module = module
+        self.state = module.params.get("state")
 
         self.base_directory = module.params.get("base_directory")
         self.compose_filename = module.params.get("name")
@@ -66,41 +67,71 @@ class ModuleComposeFile(object):
             msg="initial"
         )
 
-        create_directory(directory=self.tmp_directory, mode="0750")
-
-        if not os.path.isdir(self.base_directory):
-            create_directory(directory=self.base_directory, mode="0755")
-
-        self.checksum = Checksum(self.module)
-        self.composeFile = ComposeFile(self.module, self.checksum)
-
-        compose_data = self.composeFile.create(self.version, self.networks, self.services)
-
         file_name = os.path.join(self.base_directory, self.compose_filename)
-        tmp_file_name = os.path.join(self.tmp_directory, self.compose_filename)
 
-        self.composeFile.write(tmp_file_name, compose_data)
+        if self.state == "absent":
+            if os.path.exists(file_name):
+                _msg = f"The compose file ‘{self.compose_filename}’ was successfully deleted."
+                _changed = True
+                os.remove(file_name)
+            else:
+                _msg = f"The compose file ‘{self.compose_filename}’ has already been deleted."
+                _changed = False
 
-        changed = self.composeFile.validate(tmp_file_name, file_name)
+            return dict(
+                changed=_changed,
+                failed=False,
+                msg=_msg
+            )
 
-        result["changed"] = changed
+        if self.state == "present":
+            create_directory(directory=self.tmp_directory, mode="0750")
 
-        # self.module.log(msg=f"changed: {changed}")
+            if not os.path.isdir(self.base_directory):
+                create_directory(directory=self.base_directory, mode="0755")
 
-        if changed:
-            shutil.move(tmp_file_name, file_name)
-            result["msg"] = f"Compose file was successful written."
+            self.checksum = Checksum(self.module)
+            self.composeFile = ComposeFile(self.module)
 
-        shutil.rmtree(self.tmp_directory)
+            compose_data = self.composeFile.create(self.version, self.networks, self.services)
 
-        return result
+            tmp_file_name = os.path.join(self.tmp_directory, self.compose_filename)
+
+            self.composeFile.write(tmp_file_name, compose_data)
+            _changed = self.composeFile.validate(tmp_file_name, file_name)
+
+            if _changed:
+                shutil.move(tmp_file_name, file_name)
+                _msg = f"The compose file ‘{self.compose_filename}’ was successful written."
+            else:
+                _msg = f"The compose file ‘{self.compose_filename}’ has not been changed."
+
+            shutil.rmtree(self.tmp_directory)
+
+            return dict(
+                changed=_changed,
+                failed=False,
+                msg=_msg
+            )
+
+        if self.state == "test":
+            return result
 
 # ---------------------------------------------------------------------------------------
+
 
 def main():
     """
     """
     args = dict(
+        state = dict(
+            default="present",
+            choices=[
+                "absent",
+                "present",
+                "test"
+            ]
+        ),
         base_directory = dict(
             required=True,
             type='str'
@@ -109,7 +140,6 @@ def main():
             required=True,
             type='str'
         ),
-        state=dict(),
         version=dict(
             required=False,
             type='str'

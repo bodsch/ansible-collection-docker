@@ -7,6 +7,7 @@ docker_packages:
 docker_python_extra_args: []
 
 docker_defaults_python_packages:
+  - name: ruamel.yaml
   - name: docker
   #- name: setuptools
   #  version: 39.1.0

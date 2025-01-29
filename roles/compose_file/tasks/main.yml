@@ -4,6 +4,7 @@
   bodsch.docker.compose_file:
     base_directory: "/tmp/docker-compose.d"
     name: compose.yml
+    state: absent
     version: 3
     networks:
       mailcow:
