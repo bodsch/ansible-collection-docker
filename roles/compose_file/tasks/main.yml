@@ -4,6 +4,7 @@
   bodsch.docker.compose_file:
     base_directory: "/tmp/docker-compose.d"
     name: compose.yml
+    version: 3
     networks:
       mailcow:
         driver: bridge
@@ -16,7 +17,7 @@
             - subnet: "172.22.1.0/24"
 
     services:
-      unbound-mailcow:
+      unbound:
         state: present
         image: mailcow/unbound:1.23
         restart: unless-stopped
@@ -28,10 +29,22 @@
           - ./data/conf/unbound/unbound.conf:/etc/unbound/unbound.conf:ro,Z
         tty: true
         networks:
-          mailcow-network:
+          mailcow:
             ipv4_address: 172.22.1.254
             aliases:
               - unbound
+      memcached:
+        state: absent
+        image: memcached:alpine
+        restart: unless-stopped
+        environment:
+          - TZ=${TZ}
+        networks:
+          mailcow:
+            aliases:
+              - memcached
+
+
 
 # - name: "compose #2"
 #   bodsch.docker.compose_files:

@@ -72,32 +72,30 @@ class ModuleComposeFile(object):
             create_directory(directory=self.base_directory, mode="0755")
 
         self.checksum = Checksum(self.module)
-        self.composeFile = ComposeFile(self.module)
+        self.composeFile = ComposeFile(self.module, self.checksum)
 
         compose_data = self.composeFile.create(self.version, self.networks, self.services)
-
-        # self.module.log(msg=f"{compose_data}")
 
         file_name = os.path.join(self.base_directory, self.compose_filename)
         tmp_file_name = os.path.join(self.tmp_directory, self.compose_filename)
 
-        with open(tmp_file_name, "w") as f:
-            yaml.dump(compose_data, f)
+        self.composeFile.write(tmp_file_name, compose_data)
 
-        if os.path.exists(file_name) and os.path.exists(tmp_file_name):
-            """
-                validate
-            """
-            pass
+        changed = self.composeFile.validate(tmp_file_name, file_name)
 
-        shutil.move(tmp_file_name, file_name)
+        result["changed"] = changed
+
+        # self.module.log(msg=f"changed: {changed}")
+
+        if changed:
+            shutil.move(tmp_file_name, file_name)
+            result["msg"] = f"Compose file was successful written."
 
         shutil.rmtree(self.tmp_directory)
 
         return result
 
 # ---------------------------------------------------------------------------------------
-
 
 def main():
     """
@@ -111,6 +109,7 @@ def main():
             required=True,
             type='str'
         ),
+        state=dict(),
         version=dict(
             required=False,
             type='str'
