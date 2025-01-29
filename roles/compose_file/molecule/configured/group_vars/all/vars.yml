@@ -1,53 +1,51 @@
 ---
 
 compose_network:
-  network:
-    - name: mailcow-networks
-      state: present
-      driver: bridge
-      driver_opts:
-        com.docker.network.bridge.name: br-mailcow
-      enable_ipv6: true
-      ipam:
-        driver: default
-        config:
-          - subnet: ${IPV4_NETWORK:-172.22.1}.0/24
-          - subnet: ${IPV6_NETWORK:-fd4d:6169:6c63:6f77::/64}
+  - name: mailcow
+    state: present
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-mailcow
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: ${IPV4_NETWORK:-172.22.1}.0/24
+        # - subnet: ${IPV6_NETWORK:-fd4d:6169:6c63:6f77::/64}
 
 compose_services:
-  services:
-    - name: redis-mailcow
-      state: present
-      image: redis:7-alpine
-      entrypoint: /redis-conf.sh
-      volumes:
-        - ./app/redis-data:/data/
-        - ./data/conf/redis/redis-conf.sh:/redis-conf.sh:z
-      restart: unless-stopped
-      depends_on:
-        - netfilter-mailcow
-      ports:
-        - "${REDIS_PORT:-127.0.0.1:7654}:6379"
-      environment:
-        - TZ=${TZ}
-        - REDISPASS=${REDISPASS}
-      sysctls:
-        - net.core.somaxconn=4096
-      networks:
-        mailcow-network:
-          ipv4_address: ${IPV4_NETWORK:-172.22.1}.249
-          aliases:
-            - redis
+  - name: redis
+    state: present
+    image: redis:7-alpine
+    entrypoint: /redis-conf.sh
+    volumes:
+      - ./app/redis-data:/data/
+      - ./data/conf/redis/redis-conf.sh:/redis-conf.sh:z
+    restart: unless-stopped
+    depends_on:
+      - netfilter-mailcow
+    ports:
+      - "${REDIS_PORT:-127.0.0.1:7654}:6379"
+    environment:
+      - TZ=${TZ}
+      - REDISPASS=${REDISPASS}
+    sysctls:
+      - net.core.somaxconn=4096
+    networks:
+      mailcow:
+        ipv4_address: ${IPV4_NETWORK:-172.22.1}.249
+        aliases:
+          - redis
 
-    - name: memcached-mailcow
-      state: absent
-      image: memcached:alpine
-      restart: unless-stopped
-      environment:
-        - TZ=${TZ}
-      networks:
-        mailcow-network:
-          aliases:
-            - memcached
+  - name: memcached
+    state: absent
+    image: memcached:alpine
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    networks:
+      mailcow:
+        aliases:
+          - memcached
 
 ...

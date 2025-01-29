@@ -8,12 +8,9 @@
 from __future__ import absolute_import, division, print_function
 import os
 import shutil
-import yaml
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory, current_state
-from ansible_collections.bodsch.core.plugins.module_utils.checksum import Checksum
-# from ansible_collections.bodsch.core.plugins.module_utils.lists import compare_two_lists
+from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
 from ansible_collections.bodsch.docker.plugins.module_utils.compose_file import ComposeFile
 
 # ---------------------------------------------------------------------------------------
@@ -90,7 +87,6 @@ class ModuleComposeFile(object):
             if not os.path.isdir(self.base_directory):
                 create_directory(directory=self.base_directory, mode="0755")
 
-            self.checksum = Checksum(self.module)
             self.composeFile = ComposeFile(self.module)
 
             compose_data = self.composeFile.create(self.version, self.networks, self.services)

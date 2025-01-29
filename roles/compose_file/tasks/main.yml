@@ -4,8 +4,8 @@
   bodsch.docker.compose_file:
     base_directory: "/tmp/docker-compose.d"
     name: compose.yml
-    state: absent
-    version: 3
+    state: present
+    # version: 3
     networks:
       mailcow:
         driver: bridge
@@ -19,7 +19,6 @@
 
     services:
       unbound:
-        state: present
         image: mailcow/unbound:1.23
         restart: unless-stopped
         environment:
@@ -35,7 +34,6 @@
             aliases:
               - unbound
       memcached:
-        state: absent
         image: memcached:alpine
         restart: unless-stopped
         environment:
@@ -45,13 +43,11 @@
             aliases:
               - memcached
 
-
-
-# - name: "compose #2"
-#   bodsch.docker.compose_files:
-#     base_directory: "/tmp/docker-compose.d"
-#     version: 3
-#     networks: "{{ compose_network }}"
-#     services: "{{ compose_services }}"
+- name: "compose #2"
+  bodsch.docker.compose_files:
+    base_directory: "/tmp/docker-compose.d"
+    # version: 3
+    networks: "{{ compose_network }}"
+    services: "{{ compose_services }}"
 
 ...

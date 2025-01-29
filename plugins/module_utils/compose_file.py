@@ -32,7 +32,7 @@ class ComposeFile:
             result["version"] = version
 
         if networks:
-            result["network"] = networks
+            result["networks"] = networks
 
         if services:
             result["services"] = services
