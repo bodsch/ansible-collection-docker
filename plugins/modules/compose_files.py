@@ -50,6 +50,7 @@ class ModuleComposeFiles(object):
         self.version = module.params.get("version")
         self.networks = module.params.get("networks")
         self.services = module.params.get("services")
+        self.volumes = module.params.get("volumes")
 
         pid = os.getpid()
 
@@ -67,11 +68,13 @@ class ModuleComposeFiles(object):
 
         network_result = self._save_networks()
         service_result = self._save_services()
+        volume_result = self._save_volumes()
 
         network_changed = network_result.get("changed")
         service_changed = service_result.get("changed")
+        volume_changed = volume_result.get("changed")
 
-        _changed = (network_changed or service_changed)
+        _changed = (network_changed or service_changed or volume_changed)
 
         shutil.rmtree(self.tmp_directory)
 
@@ -79,7 +82,8 @@ class ModuleComposeFiles(object):
             changed = _changed,
             failed = False,
             networks = network_result,
-            services = service_result
+            services = service_result,
+            volumes = volume_result
         )
 
     def _save_networks(self):
@@ -166,6 +170,49 @@ class ModuleComposeFiles(object):
 
         return result
 
+    def _save_volumes(self):
+        """
+        """
+        result_state = []
+
+        for vol in self.volumes:
+            volume_name = vol.get("name", None)
+            volume_state = vol.get("state", "present")
+
+            if not volume_name:
+                """
+                """
+                continue
+
+            volume_res = {}
+
+            file_name = os.path.join(self.base_directory, f"{volume_name}.conf")
+
+            if volume_state == "absent":
+                volume_res[volume_name] = self.__file_state_absent(volume_name, file_name)
+
+            if volume_state == "present":
+
+                vol.pop("name")
+                if vol.get("state", None):
+                    vol.pop("state")
+                volume = dict()
+                volume[volume_name] = vol
+
+                volume_res[volume_name] = self.__file_state_present(volume_name, file_name, compose_type="volumes", data=volume)
+
+            result_state.append(volume_res)
+
+        _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
+
+        result = dict(
+            changed = _changed,
+            failed = _failed,
+            msg = result_state
+        )
+
+        return result
+
     def __file_state_absent(self, service_name, file_name):
         """
         """
@@ -187,9 +234,11 @@ class ModuleComposeFiles(object):
         """
         """
         if compose_type == "services":
-            compose_data = self.composeFile.create(self.version, None, data)
+            compose_data = self.composeFile.create(version=self.version, services=data)
         if compose_type == "networks":
-            compose_data = self.composeFile.create(self.version, data, None)
+            compose_data = self.composeFile.create(version=self.version, networks=data)
+        if compose_type == "volumes":
+            compose_data = self.composeFile.create(version=self.version, volumes=data)
 
         tmp_file_name = os.path.join(self.tmp_directory, f"{service_name}.conf")
 
@@ -229,6 +278,10 @@ def main():
             type='list'
         ),
         services=dict(
+            required=False,
+            type='list'
+        ),
+        volumes=dict(
             required=False,
             type='list'
         )

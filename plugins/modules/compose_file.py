@@ -50,6 +50,7 @@ class ModuleComposeFile(object):
         self.version = module.params.get("version")
         self.networks = module.params.get("networks")
         self.services = module.params.get("services")
+        self.volumes = module.params.get("volumes")
 
         pid = os.getpid()
 
@@ -89,7 +90,7 @@ class ModuleComposeFile(object):
 
             self.composeFile = ComposeFile(self.module)
 
-            compose_data = self.composeFile.create(self.version, self.networks, self.services)
+            compose_data = self.composeFile.create(self.version, self.networks, self.services, self.volumes)
 
             tmp_file_name = os.path.join(self.tmp_directory, self.compose_filename)
 
@@ -145,6 +146,10 @@ def main():
             type='dict'
         ),
         services=dict(
+            required=False,
+            type='dict'
+        ),
+        volumes=dict(
             required=False,
             type='dict'
         )

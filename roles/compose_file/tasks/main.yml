@@ -42,6 +42,9 @@
           mailcow:
             aliases:
               - memcached
+    volumes:
+      vmail-vol-1:
+      vmail-index-vol-1:
 
 - name: "compose #2"
   bodsch.docker.compose_files:
@@ -49,5 +52,6 @@
     # version: 3
     networks: "{{ compose_network }}"
     services: "{{ compose_services }}"
+    volumes: "{{ compose_volumes }}"
 
 ...

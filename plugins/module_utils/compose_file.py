@@ -21,7 +21,7 @@ class ComposeFile:
     def __init__(self, module):
         self.module = module
 
-    def create(self, version=None, networks={}, services={}):
+    def create(self, version=None, networks={}, services={}, volumes={}):
         """
         """
         # self.module.log(msg=f"ComposeFile::create()")
@@ -37,6 +37,9 @@ class ComposeFile:
         if services:
             result["services"] = services
 
+        if volumes:
+            result["volumes"] = volumes
+
         return result
 
     def write(self, file_name, data):
@@ -44,11 +47,9 @@ class ComposeFile:
         """
         yaml = ruamel.yaml.YAML()
         yaml.indent(sequence=4, offset=2)
-        # yaml.dump(data, f)
 
         with open(file_name, "w") as f:
             yaml.dump(data, f)
-            # yaml.dump(data, f, sort_keys=False)
 
     def validate(self, tmp_file, data_file):
         """

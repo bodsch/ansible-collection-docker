@@ -149,4 +149,10 @@ compose_services:
         aliases:
           - watchdog
 
+compose_volumes:
+  - name: vmail-vol-1
+    state: present
+  - name: vmail-index-vol-1
+    state: present
+
 ...
