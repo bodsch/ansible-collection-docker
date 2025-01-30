@@ -23,7 +23,7 @@ compose_services:
       - ./data/conf/redis/redis-conf.sh:/redis-conf.sh:z
     restart: unless-stopped
     depends_on:
-      - netfilter-mailcow
+      - netfilter
     ports:
       - "${REDIS_PORT:-127.0.0.1:7654}:6379"
     environment:
@@ -47,5 +47,106 @@ compose_services:
       mailcow:
         aliases:
           - memcached
+
+  - name: netfilter
+    image: mailcow/netfilter:1.60
+    stop_grace_period: 30s
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - TZ=${TZ}
+      - IPV4_NETWORK=${IPV4_NETWORK:-172.22.1}
+      - IPV6_NETWORK=${IPV6_NETWORK:-fd4d:6169:6c63:6f77::/64}
+      - SNAT_TO_SOURCE=${SNAT_TO_SOURCE:-n}
+      - SNAT6_TO_SOURCE=${SNAT6_TO_SOURCE:-n}
+      - REDIS_SLAVEOF_IP=${REDIS_SLAVEOF_IP:-}
+      - REDIS_SLAVEOF_PORT=${REDIS_SLAVEOF_PORT:-}
+      - REDISPASS=${REDISPASS}
+      - MAILCOW_REPLICA_IP=${MAILCOW_REPLICA_IP:-}
+      - DISABLE_NETFILTER_ISOLATION_RULE=${DISABLE_NETFILTER_ISOLATION_RULE:-n}
+    network_mode: "host"
+    volumes:
+      - /lib/modules:/lib/modules:ro
+
+  - name: watchdog
+    state: absent
+    image: mailcow/watchdog:2.06
+    dns:
+      - ${IPV4_NETWORK:-172.22.1}.254
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./app/rspamd-data:/var/lib/rspamd
+      - ./app/mysql-sock:/var/run/mysqld/
+      - ./app/postfix-data:/var/spool/postfix
+      - ./data/assets/ssl:/etc/ssl/mail/:ro,z
+    restart: unless-stopped
+    depends_on:
+      - postfix
+      - dovecot
+      - mysql
+      - acme
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: "20M"
+        reservations:
+          cpus: '0.1'
+          memory: "6M"
+    environment:
+      - IPV6_NETWORK=${IPV6_NETWORK:-fd4d:6169:6c63:6f77::/64}
+      - LOG_LINES=${LOG_LINES:-9999}
+      - TZ=${TZ}
+      - DBNAME=${DBNAME}
+      - DBUSER=${DBUSER}
+      - DBPASS=${DBPASS}
+      - DBROOT=${DBROOT}
+      - USE_WATCHDOG=${USE_WATCHDOG:-n}
+      - WATCHDOG_NOTIFY_EMAIL=${WATCHDOG_NOTIFY_EMAIL:-}
+      - WATCHDOG_NOTIFY_BAN=${WATCHDOG_NOTIFY_BAN:-y}
+      - WATCHDOG_NOTIFY_START=${WATCHDOG_NOTIFY_START:-y}
+      - WATCHDOG_SUBJECT=${WATCHDOG_SUBJECT:-Watchdog ALERT}
+      - WATCHDOG_NOTIFY_WEBHOOK=${WATCHDOG_NOTIFY_WEBHOOK:-}
+      - WATCHDOG_NOTIFY_WEBHOOK_BODY=${WATCHDOG_NOTIFY_WEBHOOK_BODY:-}
+      - WATCHDOG_EXTERNAL_CHECKS=${WATCHDOG_EXTERNAL_CHECKS:-n}
+      - WATCHDOG_MYSQL_REPLICATION_CHECKS=${WATCHDOG_MYSQL_REPLICATION_CHECKS:-n}
+      - WATCHDOG_VERBOSE=${WATCHDOG_VERBOSE:-n}
+      - MAILCOW_HOSTNAME=${MAILCOW_HOSTNAME}
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-mailcow-dockerized}
+      - IPV4_NETWORK=${IPV4_NETWORK:-172.22.1}
+      - IP_BY_DOCKER_API=${IP_BY_DOCKER_API:-0}
+      - CHECK_UNBOUND=${CHECK_UNBOUND:-1}
+      - SKIP_CLAMD=${SKIP_CLAMD:-n}
+      - SKIP_LETS_ENCRYPT=${SKIP_LETS_ENCRYPT:-n}
+      - SKIP_SOGO=${SKIP_SOGO:-n}
+      - HTTPS_PORT=${HTTPS_PORT:-443}
+      - REDIS_SLAVEOF_IP=${REDIS_SLAVEOF_IP:-}
+      - REDIS_SLAVEOF_PORT=${REDIS_SLAVEOF_PORT:-}
+      - REDISPASS=${REDISPASS}
+      - EXTERNAL_CHECKS_THRESHOLD=${EXTERNAL_CHECKS_THRESHOLD:-1}
+      - NGINX_THRESHOLD=${NGINX_THRESHOLD:-5}
+      - UNBOUND_THRESHOLD=${UNBOUND_THRESHOLD:-5}
+      - REDIS_THRESHOLD=${REDIS_THRESHOLD:-5}
+      - MYSQL_THRESHOLD=${MYSQL_THRESHOLD:-5}
+      - MYSQL_REPLICATION_THRESHOLD=${MYSQL_REPLICATION_THRESHOLD:-1}
+      - SOGO_THRESHOLD=${SOGO_THRESHOLD:-3}
+      - POSTFIX_THRESHOLD=${POSTFIX_THRESHOLD:-8}
+      - CLAMD_THRESHOLD=${CLAMD_THRESHOLD:-15}
+      - DOVECOT_THRESHOLD=${DOVECOT_THRESHOLD:-12}
+      - DOVECOT_REPL_THRESHOLD=${DOVECOT_REPL_THRESHOLD:-20}
+      - PHPFPM_THRESHOLD=${PHPFPM_THRESHOLD:-5}
+      - RATELIMIT_THRESHOLD=${RATELIMIT_THRESHOLD:-1}
+      - FAIL2BAN_THRESHOLD=${FAIL2BAN_THRESHOLD:-1}
+      - ACME_THRESHOLD=${ACME_THRESHOLD:-1}
+      - RSPAMD_THRESHOLD=${RSPAMD_THRESHOLD:-5}
+      - OLEFY_THRESHOLD=${OLEFY_THRESHOLD:-5}
+      - MAILQ_THRESHOLD=${MAILQ_THRESHOLD:-20}
+      - MAILQ_CRIT=${MAILQ_CRIT:-30}
+    networks:
+      mailcow:
+        aliases:
+          - watchdog
 
 ...
