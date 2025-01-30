@@ -1,0 +1,10 @@
+---
+
+collections:
+  - name: community.general
+    version: ">=6.5.0"
+  - name: community.docker
+    version: ">=3.4.5"
+  - name: bodsch.core
+    version: ">=1.0.18"
+    type: galaxy

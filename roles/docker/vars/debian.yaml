@@ -2,6 +2,7 @@
 
 docker_dependencies:
   - acl
+  - python3-ruamel.yaml
   - python3-pip
   - python3-docker
   - python3-requests

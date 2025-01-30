@@ -1,0 +1,52 @@
+---
+
+container_reporting:
+  changes: true
+  failed: true
+
+container_fail:
+  error_at_launch: true
+
+container_env_directory: /opt/container
+
+container_registry: []
+#   - username: ''
+#     password: ''
+#     host: ''
+
+container: []
+
+container_pre_tasks: []
+container_post_tasks: []
+
+container_custom_tasks:
+  - prune.sh
+  - list_all_container.sh
+  - list_all_images.sh
+  - remove_stopped_container.sh
+  - remove_untagged_images.sh
+  - parse_container_fact.sh
+
+container_use_network: true
+container_network: []
+#   - name: docker_network
+#     subnet: 172.3.27.0/24
+#     gateway: 172.3.27.2
+#     iprange: 172.3.27.0/26
+
+# see: https://docs.ansible.com/ansible/latest/collections/community/docker/docker_container_module.html#parameter-comparisons
+container_comparisons:
+  # '*': ignore
+  image: strict   # don't restart containers with older versions of the image
+  env: strict     # we want precisely this environment
+  labels: ignore
+
+# filter by ["name", "hostname", "image"]
+container_filter:
+  by: ""
+  names: []
+
+container_default_behavior: "compatibility"
+container_clean_update_fact: true
+
+...

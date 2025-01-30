@@ -1,0 +1,87 @@
+
+global:
+  scrape_interval:     30s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 30s
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'development'
+
+{% set valid = [
+    'solr',
+    'content-management-server',
+    'content-feeder',
+    'caefeeder-preview',
+    'workflow-server',
+    'user-changes',
+    'elastic-worker',
+    'studio-server',
+    'cae-preview',
+    'cae-preview-01',
+    'cae-preview-02',
+    'headless-server-preview',
+    'master-live-server',
+    'caefeeder-live',
+    'replication-live-server',
+    'cae-live',
+    'cae-live-01',
+    'cae-live-02',
+    'cae-live-03',
+    'cae-live-04',
+    'cae-live-05',
+    'cae-live-06',
+    'headless-server-live',
+    'headless-server-live-01',
+    'headless-server-live-02'
+] %}
+
+scrape_configs:
+  - job_name: prometheus
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          environment: monitoring
+          zone: monitoring
+
+{% if 'node_exporter' in container %}
+  # node exporter
+  - job_name: 'nodeexporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["{{ ansible_fqdn }}:9100"]
+        labels:
+          environment: monitoring
+          zone: monitoring
+          collector_type: node_exporter
+{% endif %}
+
+{% if 'cadvisor' in container %}
+  # cadvisor
+  - job_name: cadvisor
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["{{ ansible_fqdn }}:8081"]
+        labels:
+          environment: monitoring
+          zone: monitoring
+          collector_type: cadvisor
+{% endif %}
+
+{% if container %}
+
+{% for item in container -%}
+{% if item['name'] in valid %}
+  # {{ item['name'] }}
+  - job_name: {{ item['name'] }}
+    scrape_interval: 15s
+    static_configs:
+      - targets: [ "{{ item['name'] }}:8199" ]
+        labels:
+          environment: coremedia
+          hostname: {{ ansible_fqdn }}
+          collector_type: coremedia
+{% endif %}
+{% endfor %}
+{% endif %}

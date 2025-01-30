@@ -1,0 +1,57 @@
+---
+
+- name: "compose #1"
+  bodsch.docker.compose_file:
+    base_directory: "/tmp/docker-compose.d"
+    name: compose.yml
+    state: present
+    # version: 3
+    networks:
+      mailcow:
+        driver: bridge
+        driver_opts:
+          com.docker.network.bridge.name: br-mailcow
+        enable_ipv6: false
+        ipam:
+          driver: default
+          config:
+            - subnet: "172.22.1.0/24"
+
+    services:
+      unbound:
+        image: mailcow/unbound:1.23
+        restart: unless-stopped
+        environment:
+          - TZ=UTC
+          - SKIP_UNBOUND_HEALTHCHECK=y
+        volumes:
+          - ./data/hooks/unbound:/hooks:Z
+          - ./data/conf/unbound/unbound.conf:/etc/unbound/unbound.conf:ro,Z
+        tty: true
+        networks:
+          mailcow:
+            ipv4_address: 172.22.1.254
+            aliases:
+              - unbound
+      memcached:
+        image: memcached:alpine
+        restart: unless-stopped
+        environment:
+          - TZ=${TZ}
+        networks:
+          mailcow:
+            aliases:
+              - memcached
+    volumes:
+      vmail-vol-1:
+      vmail-index-vol-1:
+
+- name: "compose #2"
+  bodsch.docker.compose_files:
+    base_directory: "/tmp/docker-compose.d"
+    # version: 3
+    networks: "{{ compose_network }}"
+    services: "{{ compose_services }}"
+    volumes: "{{ compose_volumes }}"
+
+...

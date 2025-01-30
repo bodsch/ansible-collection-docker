@@ -11,6 +11,7 @@ docker_dependencies:
   - python-requests
   - python-urllib3
   - python-websocket-client
+  - python-ruamel-yaml
 
 docker_defaults_python_packages:
   - name: docker

@@ -1,0 +1,22 @@
+---
+
+galaxy_info:
+  role_name: container
+  author: Bodo Schulz
+  description: A simple and generic role for deploying container
+  license: Apache
+  min_ansible_version: "2.9"
+  platforms:
+    - name: ArchLinux
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - container
+    - docker
+    - deployment
+
+dependencies: []

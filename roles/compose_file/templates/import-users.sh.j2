@@ -1,0 +1,67 @@
+#!/bin/bash
+
+DOCKER=$(command -v docker)
+
+# -------------------------------------------------------------------------------------------------
+# environments
+
+ENV_DIRECTORY="{{ container_env_directory }}"
+
+SKIP_CONTENT="false"
+FORCE_REIMPORT_CONTENT="true"
+FORCE_REIMPORT_THEMES="false"
+
+BLOB_STORAGE_URL="/coremedia/import/content-blobs.zip"
+CONTENT_ARCHIVE_URL="/coremedia/import/content-users.zip"
+THEMES_ARCHIVE_URL="/coremedia/import/frontend.zip"
+
+#CMS_IOR_URL="{{ container_cms_ior }}"
+#MLS_IOR_URL="{{ container_mls_ior }}"
+#WFS_IOR_URL="{{ container_wfs_ior }}"
+
+DOCKER_VOL="--volume {{ volumes | join(' --volume ' ) }}"
+DOCKER_LINKS="--link {{ links | join(' --link ' ) }}"
+
+# {{ networks }}
+{% set values = [] %}
+{% for k in networks -%}
+{{ values.append( k.name ) or "" }}
+{% endfor -%}
+
+# {{ values }}
+
+DOCKER_NETWORK="--network {{ values | join(' --network ' ) }}"
+
+# {{ etc_hosts }}
+
+DOCKER_ADD_HOSTS="--add-host {{ etc_hosts | join(' --add-host ' ) }}"
+
+DOCKER_ENV="--env CMS_IOR_URL="{{ container_cms_ior }}" \
+    --env MLS_IOR_URL="{{ container_mls_ior }}" \
+    --env WFS_IOR_URL="{{ container_wfs_ior }}" \
+    --env CONTENT_ARCHIVE_URL="/coremedia/import/content-users.zip""
+
+# if [ ${ENV_DIRECTORY}
+
+
+# -------------------------------------------------------------------------------------------------
+
+# ${DOCKER} run \
+#   --rm \
+#   --add-host rls.cm.local:192.168.124.35 \
+#   --entrypoint /coremedia/tools/bin/cm \
+#   harbor.cm.local/coremedia/management-tools:2007.1 \
+#   runlevel -url http://rls.cm.local:42080/ior --user admin --password admin
+#
+# docker run \
+#   -ti \
+#   --volume /etc/coremedia/management-tools/patches:/coremedia/patches:ro \
+#   --volume /etc/coremedia/management-tools/import:/coremedia/import/ \
+#   --env-file /etc/coremedia/management-tools/container.env \
+#   --network coremedia \
+#   --link content-management-server \
+#   --link workflow-server  \
+#   --add-host rls.cm.local:192.168.124.35  \
+#   --entrypoint "" \
+#   harbor.cm.local/coremedia/management-tools:2007.1 \
+#   bash

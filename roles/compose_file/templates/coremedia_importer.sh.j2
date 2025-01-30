@@ -1,0 +1,108 @@
+#!/bin/bash
+
+ENV_DIRECTORY="{{ container_env_directory }}"
+
+if [ ! -e "${ENV_DIRECTORY}/management-tools/import.rc" ]
+then
+  echo "config '${ENV_DIRECTORY}/management-tools/import.rc' not found!"
+  exit 1
+fi
+
+. "${ENV_DIRECTORY}/management-tools/import.rc"
+
+extract_content_archive() {
+
+  if [ -e ${CONTENT_ARCHIVE} ]
+  then
+      pushd ${ENV_DIRECTORY}/management-tools/import > /dev/null
+
+      [ -d users ] && rm -rf users
+
+      unzip -u -o -qq $(basename ${CONTENT_ARCHIVE_URL})
+
+      for file in ${USER_BLACKLIST}
+      do
+          [ -e users/${file} ] && rm -f users/${file}
+      done
+  fi
+}
+
+# -------------------------------------------------------------------------------------------------
+
+run_importer() {
+
+  ${DOCKER} run \
+      --rm \
+      ${DOCKER_VOLUMES} \
+      ${DOCKER_LINKS} \
+      ${DOCKER_NETWORK} \
+      ${DOCKER_ENV} \
+      ${DOCKER_ADD_HOSTS} \
+      ${DOCKER_CONTAINER} \
+      patches/patch \
+      ${TASKS}
+}
+
+# -------------------------------------------------------------------------------------------------
+
+TASKS=
+
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+  case "${key}" in
+    -u|--user)
+      TASKS="${TASKS} patches/import-users"
+      shift # past argument
+    ;;
+    -t|--themes)
+      TASKS="${TASKS} patches/import-themes"
+      shift
+    ;;
+    -c|--content)
+      TASKS="${TASKS} patches/import-content"
+      shift
+    ;;
+    -p|--publish)
+      TASKS="${TASKS} patches/publish-content"
+      shift
+    ;;
+    *)    # unknown option
+      POSITIONAL+=("$1") # save it in an array for later
+      shift # past argument
+    ;;
+  esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+# -------------------------------------------------------------------------------------------------
+
+run() {
+#    echo "${TASKS}"
+    extract_content_archive
+    run_importer "${TASKS}"
+}
+
+run
+
+# -------------------------------------------------------------------------------------------------
+
+# ${DOCKER} run \
+#   --rm \
+#   --add-host rls.cm.local:192.168.124.35 \
+#   --entrypoint /coremedia/tools/bin/cm \
+#   harbor.cm.local/coremedia/management-tools:2007.1 \
+#   runlevel -url http://rls.cm.local:42080/ior --user admin --password admin
+#
+# docker run \
+#   -ti \
+#   --volume /etc/coremedia/management-tools/patches:/coremedia/patches:ro \
+#   --volume /etc/coremedia/management-tools/import:/coremedia/import/ \
+#   --env-file /etc/coremedia/management-tools/container.env \
+#   --network coremedia \
+#   --link content-management-server \
+#   --link workflow-server  \
+#   --add-host rls.cm.local:192.168.124.35  \
+#   --entrypoint "" \
+#   harbor.cm.local/coremedia/management-tools:2007.1 \
+#   bash
