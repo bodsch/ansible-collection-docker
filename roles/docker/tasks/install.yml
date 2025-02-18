@@ -22,7 +22,7 @@
     force: true
     owner: root
     group: root
-    mode: 0640
+    mode: "0640"
   notify:
     - validate config
     - reload docker

@@ -8,7 +8,7 @@
 - name: test docker plugins
   become: true
   remote_user: root
-  docker_plugins:
+  bodsch.docker.docker_plugins:
     state: test
     plugin_source: "{{ item.source }}"
     plugin_version: "{{ item.version }}"
@@ -20,7 +20,7 @@
   register: _plugin_state
 
 - name: install docker plugins
-  docker_plugins:
+  bodsch.docker.docker_plugins:
     state: present
     plugin_source: "{{ item.source }}"
     plugin_version: "{{ item.version }}"

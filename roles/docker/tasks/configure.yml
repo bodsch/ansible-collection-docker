@@ -4,7 +4,7 @@
   ansible.builtin.file:
     path: /etc/docker
     state: directory
-    mode: 0775
+    mode: "0775"
     owner: root
     group: root
 
@@ -32,39 +32,56 @@
   block:
     - name: create dropin directory
       ansible.builtin.file:
-        path: "/etc/systemd/system/docker.service.d"
+        path: "{{ systemd_etc_directory }}/docker.service.d"
         state: "directory"
-        mode: 0750
+        mode: "0750"
         owner: root
         group: root
 
     - name: create systemd dropin to using configuration
       ansible.builtin.template:
         src: systemd/overwrite.conf.j2
-        dest: "/etc/systemd/system/docker.service.d/overwrite.conf"
-        mode: 0644
+        dest: "{{ systemd_etc_directory }}/docker.service.d/overwrite.conf"
+        mode: "0644"
         owner: root
         group: root
       notify:
         - daemon reload
 
-    - name: create systemd dropin for proxy
+    - name: create {{ docker_container_prune.name }} run configuration
       ansible.builtin.template:
-        src: "systemd/proxy.conf.j2"
-        dest: "/etc/systemd/system/docker.service.d/proxy.conf"
-        mode: 0644
+        src: "{{ docker_container_prune.name }}.j2"
+        dest: "{{ docker_defaults_directory }}/{{ docker_container_prune.name }}"
+        force: true
         owner: root
         group: root
+        mode: "0640"
+
+    - name: create systemd service unit {{ docker_container_prune.name }}.service
+      ansible.builtin.template:
+        src: "systemd/{{ docker_container_prune.name }}.service.j2"
+        dest: "{{ systemd_lib_directory }}/{{ docker_container_prune.name }}.service"
+        owner: root
+        group: root
+        mode: "0644"
       notify:
         - daemon reload
-      when:
-        - docker_proxy.enabled
+
+    - name: create systemd timer unit {{ docker_container_prune.name }}.timer
+      ansible.builtin.template:
+        src: "systemd/{{ docker_container_prune.name }}.timer.j2"
+        dest: "{{ systemd_lib_directory }}/{{ docker_container_prune.name }}.timer"
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - daemon reload
 
 - name: create openrc config file
   ansible.builtin.template:
     src: openrc/conf.d/docker.j2
     dest: /etc/conf.d/docker
-    mode: 0644
+    mode: "0644"
     owner: root
     group: root
   notify:

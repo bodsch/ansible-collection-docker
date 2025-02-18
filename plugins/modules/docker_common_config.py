@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import json
 import docker
+import shutil
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
@@ -168,6 +169,8 @@ class DockerCommonConfig(object):
 
         if new_file:
             msg = "The configuration was successfully created."
+
+        shutil.rmtree(self.tmp_directory)
 
         return dict(
             changed = changed,

@@ -10,7 +10,7 @@
       ansible.builtin.get_url:
         url: "https://github.com/docker/compose/releases/download/{{ docker_compose.version }}/docker-compose-Linux-x86_64"
         dest: "/tmp/docker-compose-{{ docker_compose.version }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5
@@ -21,7 +21,7 @@
       ansible.builtin.copy:
         src: "/tmp/docker-compose-{{ docker_compose.version }}"
         dest: "/usr/local/bin/"
-        mode: 0755
+        mode: "0755"
         owner: root
         group: root
 

@@ -1,0 +1,11 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+[Unit]
+Description         = Container cleanup timer
+
+[Timer]
+OnUnitInactiveSec   = 24h
+
+[Install]
+WantedBy            = timers.target
