@@ -1,0 +1,18 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+OPTIONS="
+  --all \
+  --force \
+  {% if docker_container_prune.filter is defined and
+        docker_container_prune.filter | count > 0 %}
+    {% set _until = docker_container_prune.filter.until | default('') %}
+    {% set _label = docker_container_prune.filter.label | default('') %}
+    {% if _until | string | length > 0 %}
+  --filter 'until={{ _until }}' \
+    {% endif %}
+    {% if _label | string | length > 0 %}
+  --filter 'label={{ _label }}' \
+    {% endif %}
+  {% endif %}
+"

@@ -121,7 +121,7 @@
   become: true
   when:
     - container_names | default([]) | count > 0
-  container_directories:
+  bodsch.docker.container_directories:
     base_directory: "{{ container_env_directory }}"
     container: "{{ container_names }}"
     owner: '1000'
@@ -135,7 +135,7 @@
   become: true
   when:
     - container_environnments | default([]) | count > 0
-  container_environments:
+  bodsch.docker.container_environments:
     base_directory: "{{ container_env_directory }}"
     container: "{{ container_environnments }}"
     diff: false
@@ -150,7 +150,7 @@
   when:
     - container_mounts | default([]) | count > 0 or
       container_volumes | default([]) | count > 0
-  container_mounts:
+  bodsch.docker.container_mounts:
     data: "{{ container }}"
     volumes: true
     mounts: true

@@ -14,7 +14,7 @@
       ansible.builtin.template:
         src: apt/docker-ce.list.j2
         dest: /etc/apt/sources.list.d/docker-ce.list
-        mode: 0644
+        mode: "0644"
         owner: root
         group: root
 

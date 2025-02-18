@@ -1,0 +1,82 @@
+---
+docker_container_prune:
+  enable: true
+  state: started
+  name: container-cleanup
+  filter:
+    until: 4h
+
+docker_config_diff: true
+
+docker_config:
+  data_root: /opt/docker
+  max_concurrent_downloads: 10
+  debug: false
+  # enable experimental mode
+  experimental: true
+  # expose docker api over socket file and tcp
+  hosts:
+    - unix:///var/run/docker.sock
+    # - tcp://0.0.0.0:3485
+  # bip: "172.10.9.0/24"
+  fixed_cidr: "172.10.9.0/24"
+  # set default search domains
+  dns_search:
+    - docker.local
+  tls: false
+  tlsverify: false
+  log_driver: "json-file"
+  log_opts:
+    "max-size": "10m"
+    "max-file": "3"
+    mode: non-blocking
+    max-buffer-size: 4m
+
+docker_client_config:
+  ## the location we should push client configuration
+  - location: "/root/.docker/config.json"
+    enabled: true
+    auths:
+      registry.gitfoo.tld:
+        auth: amVua2luczpydWJiZWwtZGllLWthdHotZHUtZHVtbXNjaHfDpHR6ZXIxCg==
+      test.tld:
+        username: "FOO-was-sonst"
+        password: "ja-toll-schon-wieder-alles-scheisse!"
+    formats:
+      ps:
+        - ".ID"
+        - ".Names"
+        - ".Status"
+        - ".RunningFor"
+      images:
+        - ".ID"
+        - ".Size"
+        - ".Repository"
+        - ".Tag"
+        - ".CreatedAt"
+
+    ## the location we should push client configuration
+  - location: "/var/tmp/foo/config.json"
+    state: absent
+    enabled: false
+    owner: "nobody"
+    group: "1000"
+    auths:
+      "test.tld":
+        username: "FOO-was-sonst"
+        password: "ja-toll-schon-wieder-alles-scheisse!"
+    formats:
+      ps:
+        - ".ID"
+        - ".Names"
+        - ".Status"
+        - ".RunningFor"
+
+    ## must be ignored
+  - enabled: false
+    auths:
+      "test.tld":
+        username: "FOO-was-sonst"
+        passwort: "ja-toll-schon-wieder-alles-scheisse!"
+
+...

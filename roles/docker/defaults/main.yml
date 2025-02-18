@@ -16,6 +16,14 @@ docker_service:
   ## name of docker service
   name: docker
 
+docker_container_prune:
+  enable: true
+  state: started
+  name: container-cleanup
+  filter:
+    until: 240h           #
+    # label: 'env=stage'    #
+
 ## install docker-compose in version
 docker_compose: {}
 # as example:

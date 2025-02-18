@@ -94,4 +94,7 @@ docker_containerd:
 
 docker_defaults_directory: /etc/default
 
+systemd_etc_directory: /etc/systemd/system
+systemd_lib_directory: /lib/systemd/system
+
 ...

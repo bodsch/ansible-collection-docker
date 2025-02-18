@@ -9,4 +9,36 @@
     state: started
     enabled: "{{ docker_service.enable }}"
 
+- name: ensure {{ docker_container_prune.name }} is running and enabled
+  when:
+    - docker_container_prune.enable | bool
+  block:
+    # - name: "{{ docker_container_prune.name }}.service"
+    #   ansible.builtin.service:
+    #     name: "{{ docker_container_prune.name }}.service"
+    #     state: "{{ docker_container_prune.state }}"
+    #     enabled: "{{ docker_container_prune.enable }}"
+
+    - name: "{{ docker_container_prune.name }}.timer"
+      ansible.builtin.service:
+        name: "{{ docker_container_prune.name }}.timer"
+        state: "{{ docker_container_prune.state }}"
+        enabled: "{{ docker_container_prune.enable }}"
+
+- name: ensure {{ docker_container_prune.name }} is disabled
+  when:
+    - not docker_container_prune.enable | bool
+  block:
+    # - name: "{{ docker_container_prune.name }}.service"
+    #   ansible.builtin.service:
+    #     name: "{{ docker_container_prune.name }}.service"
+    #     state: stopped
+    #     enabled: false
+
+    - name: "{{ docker_container_prune.name }}.timer"
+      ansible.builtin.service:
+        name: "{{ docker_container_prune.name }}.timer"
+        state: stopped
+        enabled: false
+
 ...
