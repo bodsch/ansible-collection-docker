@@ -3,7 +3,7 @@
 . hooks/molecule.rc
 
 # set -x
-set -e
+# set -e
 
 TOX_TEST="${1}"
 
@@ -14,12 +14,17 @@ then
     echo "- ${COLLECTION_ROLE} - ${COLLECTION_SCENARIO}"
     echo ""
 
-    pushd "roles/${COLLECTION_ROLE}"
+    pushd "roles/${COLLECTION_ROLE}" > /dev/null
+
+    if [ -e collections.yml ]
+    then
+      ansible_collection
+    fi
 
     tox "${TOX_OPTS}" -- molecule ${TOX_TEST} --scenario-name ${COLLECTION_SCENARIO}
 
     echo ""
-    popd
+    popd > /dev/null
   else
     echo "collection role ${COLLECTION_ROLE} not found"
   fi
@@ -29,19 +34,33 @@ else
     echo "- ${role} - ${COLLECTION_SCENARIO}"
     echo ""
 
-    pushd roles/${role}
+    pushd roles/${role} > /dev/null
 
-    if [ -f "./tox.ini" ]
+    if [ -e collections.yml ]
     then
-      for test in $(find molecule -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
-      do
-        export TOX_SCENARIO=${test}
+      ansible_collection
+    fi
 
-        tox "${TOX_OPTS}" -- molecule --verbose ${TOX_TEST} ${TOX_ARGS}
-      done
+    if [ "${TOX_TEST}" = "lint" ]
+    then
+      set +e
+      ansible-lint .
+      yamllint .
+      flake8 .
+      echo "done."
+    else
+      if [ -f "./tox.ini" ]
+      then
+        for test in $(find molecule -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
+        do
+          export TOX_SCENARIO=${test}
+
+          tox "${TOX_OPTS}" -- molecule ${TOX_TEST} ${TOX_ARGS}
+        done
+      fi
     fi
 
     echo ""
-    popd
+    popd > /dev/null
   done
 fi
