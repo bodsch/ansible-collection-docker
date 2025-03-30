@@ -3,6 +3,7 @@
 - name: prepare
   ansible.builtin.import_tasks: prepare.yml
   tags:
+    - docker
     - always
 
 - name: repositories
