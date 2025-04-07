@@ -1,7 +1,12 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
-OPTIONS="serve /etc/docker/registry/config.yml"
+OPTIONS="serve {{ registry_config_dir }}/config.yml"
+
+# removes the error `traces export: Post \"https://localhost:4318/v1/traces\`
+OTEL_TRACES_EXPORTER=none
+# completly disables telemetry.
+OTEL_SDK_DISABLED=true
 
 {#
 # registry --help

@@ -6,4 +6,4 @@
 user="{{ registry_system_user }}"
 group="{{ registry_system_group }}"
 
-command_args="serve /etc/docker/registry/config.yml"
+command_args="serve {{ registry_config_dir }}/config.yml"

@@ -8,11 +8,11 @@ group=${group:-${SVCNAME}}
 command="/usr/bin/registry"
 supervisor="supervise-daemon"
 
-command_args="${command_args:-serve /etc/docker/registry/config.yml}"
+command_args="${command_args:-serve {{ registry_config_dir }}/config.yml}"
 command_user="${user}:${group}"
 
 command_args_background="--background"
-required_files="/etc/docker/registry/config.yml"
+required_files="{{ registry_config_dir }}/config.yml"
 
 output_log="/var/log/${RC_SVCNAME}/${RC_SVCNAME}.log"
 error_log="${output_log}"

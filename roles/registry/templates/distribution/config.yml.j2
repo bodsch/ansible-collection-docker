@@ -10,7 +10,8 @@ log:
   {% if registry_log.accesslog is defined and
         registry_log.accesslog | count > 0 %}
   accesslog:
-    {% if registry_log.accesslog.disabled is defined %}
+    {% if registry_log.accesslog.disabled is defined and
+          registry_log.accesslog.disabled | string | length > 0 %}
     disabled: {{ registry_log.accesslog.disabled | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
     {% endif %}
   {% endif %}
@@ -37,11 +38,17 @@ log:
     {{ k }}: {{ v }}
     {% endfor %}
   {% endif %}
+  {% if registry_log.hooks is defined and
+        registry_log.hooks | count > 0 %}
+  hooks:
+    {{ registry_log.hooks | to_nice_yaml(indent=4, sort_keys=False) | indent(2, False) }}
+  {% endif %}
+  reportcaller: {{ registry_log.reportcaller | default('false') | bool | bodsch.core.config_bool(true_as='true', false_as='false') }}
+
 {% endif -%}
 
 {# https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage #}
-{%- if registry_storage is defined and
-      registry_storage | count > 0 %}
+{%- if registry_storage is defined and registry_storage | count > 0 %}
 storage:
   {% if registry_storage.filesystem is defined and
         registry_storage.filesystem | count > 0 %}
@@ -60,14 +67,14 @@ storage:
   {% if registry_storage.cache is defined and
         registry_storage.cache | count > 0 %}
   cache:
+    {% set _cache_blobdescriptor = "inmemory" %}
     {% if registry_storage.cache.blobdescriptor is defined and
           registry_storage.cache.blobdescriptor | string | length > 0 %}
-      {% set _cache_blobdescriptor = "inmemory" %}
       {% if registry_storage.cache.blobdescriptor in ["redis", "inmemory"] %}
         {% set _cache_blobdescriptor = registry_storage.cache.blobdescriptor %}
       {% endif %}
-    blobdescriptor: {{ _cache_blobdescriptor }}
     {% endif %}
+    blobdescriptor: {{ _cache_blobdescriptor }}
     {% if registry_storage.cache.blobdescriptorsize is defined and
           registry_storage.cache.blobdescriptorsize | string | length > 0 %}
     blobdescriptorsize: {{ registry_storage.cache.blobdescriptorsize }}
@@ -75,14 +82,12 @@ storage:
   {% endif %}
   {% if registry_storage.maintenance is defined and
         registry_storage.maintenance | count > 0 %}
+    {% set _maintenance = registry_storage.maintenance %}
   maintenance:
-    uploadpurging:
-      enabled: true
-      age: 168h
-      interval: 24h
-      dryrun: false
-    readonly:
-      enabled: false
+    {% for k, v in _maintenance.items() %}
+    {{ k }}:
+      {{ v | to_nice_yaml(indent=6,sort_keys=False) | indent(6, False) }}
+    {% endfor %}
   {% endif %}
   {% if registry_storage.redirect is defined and
         registry_storage.redirect.disable is defined %}
@@ -203,6 +208,11 @@ health:
   {{ registry_health | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif -%}
 
+{%- if registry_catalog is defined and registry_catalog | count > 0 %}
+# catalog:
+#   maxentries: 1000
+{% endif -%}
+
 {# https://github.com/distribution/distribution/blob/main/docs/configuration.md#proxy #}
 {%- if registry_proxy is defined and
       registry_proxy | count > 0 %}
@@ -223,3 +233,67 @@ compatibility:
 validation:
   {{ registry_validation | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif -%}
+
+{%- if registry_policy is defined and registry_policy | count > 0 %}
+# policy:
+#   repository: []
+{% endif -%}
+
+{#
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  azure:
+    accountname: accountname
+    accountkey: base64encodedaccountkey
+    container: containername
+  gcs:
+    bucket: bucketname
+    keyfile: /path/to/keyfile
+    credentials:
+      type: service_account
+      project_id: project_id_string
+      private_key_id: private_key_id_string
+      private_key: private_key_string
+      client_email: client@example.com
+      client_id: client_id_string
+      auth_uri: http://example.com/auth_uri
+      token_uri: http://example.com/token_uri
+      auth_provider_x509_cert_url: http://example.com/provider_cert_url
+      client_x509_cert_url: http://example.com/client_cert_url
+    rootdirectory: /gcs/object/name/prefix
+  s3:
+    accesskey: awsaccesskey
+    secretkey: awssecretkey
+    region: us-west-1
+    regionendpoint: http://myobjects.local
+    forcepathstyle: true
+    accelerate: false
+    bucket: bucketname
+    encrypt: true
+    keyid: mykeyid
+    secure: true
+    v4auth: true
+    chunksize: 5242880
+    multipartcopychunksize: 33554432
+    multipartcopymaxconcurrency: 100
+    multipartcopythresholdsize: 33554432
+    rootdirectory: /s3/object/name/prefix
+    loglevel: debug
+  inmemory:
+  delete:
+    enabled: false
+  cache:
+    blobdescriptor: inmemory
+    blobdescriptorsize: 10000
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 24h
+      dryrun: false
+    readonly:
+      enabled: false
+  redirect:
+    disable: false
+#}
