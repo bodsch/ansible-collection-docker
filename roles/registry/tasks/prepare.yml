@@ -140,24 +140,4 @@
     group: "{{ registry_system_group }}"
     mode: 0755
 
-- name: merge registry configuration between defaults and custom
-  ansible.builtin.set_fact:
-    registry_service: "{{ registry_defaults_service | combine(registry_service, recursive=True) }}"
-    registry_log: "{{ registry_defaults_log | combine(registry_log, recursive=True) }}"
-    registry_storage: "{{ registry_defaults_storage | combine(registry_storage, recursive=True) }}"
-    registry_auth: "{{ registry_defaults_auth | combine(registry_auth, recursive=True) }}"
-    registry_middleware: "{{ registry_defaults_middleware | combine(registry_middleware, recursive=True) }}"
-    registry_reporting: "{{ registry_defaults_reporting | combine(registry_reporting, recursive=True) }}"
-    registry_http: "{{ registry_defaults_http | combine(registry_http, recursive=True) }}"
-    registry_notifications: "{{ registry_defaults_notifications | combine(registry_notifications, recursive=True) }}"
-    registry_redis: "{{ registry_defaults_redis | combine(registry_redis, recursive=True) }}"
-    registry_health: "{{ registry_defaults_health | combine(registry_health, recursive=True) }}"
-    registry_proxy: "{{ registry_defaults_proxy | combine(registry_proxy, recursive=True) }}"
-    registry_compatibility: "{{ registry_defaults_compatibility | combine(registry_compatibility, recursive=True) }}"
-    registry_validation: "{{ registry_defaults_validation | combine(registry_validation, recursive=True) }}"
-
-- name: define registry data directory
-  ansible.builtin.set_fact:
-    registry_data_dir: "{{ registry_storage.filesystem.rootdirectory | default('/var/lib/registry') }}"
-
 ...

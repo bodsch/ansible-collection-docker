@@ -20,30 +20,31 @@ registry_defaults_service: {}
 
 # https://github.com/registry/registry/blob/master/v2/pkg/config/config.go
 
-registry_defaults_log:
-  accesslog:
-    disabled: true
-  level: info
-  formatter: text
-  fields: {}
-  #  service: registry
-  #  environment: staging
-  # hooks:
-  #   - type: mail
-  #     disabled: true
-  #     levels:
-  #       - panic
-  #     options:
-  #       smtp:
-  #         addr: mail.example.com:25
-  #         username: mailuser
-  #         password: password
-  #         insecure: true
-  #       from: sender@example.com
-  #       to:
-  #         - errors@example.com
+registry_defaults_log:                                      #
+  accesslog:                                                # AccessLog configures access logging.
+    disabled: true                                          # Disabled disables access logging.
+  level: info                                               # Level is the granularity at which registry operations are logged.
+  formatter: text                                           # Formatter overrides the default formatter with another. Options include "text", "json" and "logstash".
+  fields: {}                                                # Fields allows users to specify static string fields to include in the logger context.
+  #  service: registry                                      #
+  #  environment: staging                                   #
+  hooks: []                                                 # Hooks allows users to configure the log hooks, to enabling the sequent handling behavior, when defined levels of log message emit.
+  #   - type: mail                                          # Type allows user to select which type of hook handler they want.
+  #     disabled: true                                      # Disable lets user select to enable hook or not.
+  #     levels:                                             # Levels set which levels of log message will let hook executed.
+  #       - panic                                           #
+  #     options:                                            # MailOptions allows user to configure email parameters.
+  #       smtp:                                             # SMTP defines the configuration options for the SMTP server used for sending email notifications.
+  #         addr: mail.example.com:25                       # Addr defines smtp host address
+  #         username: mailuser                              # Username defines user name to smtp host
+  #         password: password                              # Password defines password of login user
+  #         insecure: true                                  # Insecure defines if smtp login skips the secure certification.
+  #       from: sender@example.com                          # From defines mail sending address
+  #       to:                                               # To defines mail receiving address
+  #         - errors@example.com                            #
+  reportcaller: false                                       # ReportCaller allows user to configure the log to report the caller
 
-registry_defaults_storage:
+registry_defaults_storage:                                  # Type returns the storage driver type, such as filesystem or s3
   filesystem:
     rootdirectory: /var/lib/registry
     maxthreads: 100
@@ -177,104 +178,136 @@ registry_defaults_reporting: {}
 #     verbose: true
 
 registry_defaults_http:
-  addr: localhost:5000
-  # prefix: /my/nested/registry/
-  # host: https://myregistryaddress.org:5000
-  secret: "{{ ansible_host | b64encode }}"
-  relativeurls: true
-  ## draintimeout: 60s
-  ## tls:
-  ##   certificate: /path/to/x509/public
-  ##   key: /path/to/x509/private
-  ##   clientcas:
-  ##     - /path/to/ca.pem
-  ##     - /path/to/another/ca.pem
-  ##   letsencrypt:
-  ##     cachefile: /path/to/cache-file
-  ##     email: emailused@letsencrypt.com
-  ##     hosts: [myregistryaddress.org]
-  debug:
-    addr: localhost:5001
-    prometheus:
-      enabled: true
-      path: /metrics
-#   headers:
+  addr: localhost:5000                                      # Addr specifies the bind address for the registry instance.
+  net: ""                                                   # Net specifies the net portion of the bind address. A default empty value means tcp.
+  # host: https://myregistryaddress.org:5000                # Host specifies an externally-reachable address for the registry, as a fully qualified URL
+  # prefix: /my/nested/registry/                            # Prefix specifies a URL path prefix for the HTTP interface.
+                                                            # This can be used to serve the registry under a specific path
+                                                            # rather than at the root of the domain (e.g., "/registry").
+
+  secret: "{{ ansible_host | b64encode }}"                  # Secret specifies the secret key which HMAC tokens are created with.
+  relativeurls: true                                        # RelativeURLs specifies that relative URLs should be returned in Location headers
+  ## draintimeout: 60s                                      # Amount of time to wait for connection to drain before shutting down when registry
+                                                            # receives a stop signal
+  ## tls:                                                   # TLS instructs the http server to listen with a TLS configuration.
+                                                            # This only support simple tls configuration with a cert and key.
+                                                            # Mostly, this is useful for testing situations or simple deployments
+                                                            # that require tls. If more complex configurations are required, use
+                                                            # a proxy or make a proposal to add support here.
+  ##   certificate: /path/to/x509/public                    # Certificate specifies the path to an x509 certificate file to be used for TLS.
+  ##   key: /path/to/x509/private                           # Key specifies the path to the x509 key file, which should contain the private portion for the file specified in Certificate.
+  ##   clientcas:                                           # Specifies the CA certs for client authentication
+  ##     - /path/to/ca.pem                                  #
+  ##     - /path/to/another/ca.pem                          #
+  ##   clientauth:                                          # Client certificate authentication mode (One of: request-client-cert, require-any-client-cert, verify-client-cert-if-given, require-and-verify-client-cert)
+  ##   minimumtls:                                          # Specifies the lowest TLS version allowed
+  ##   ciphersuites: []                                     # Specifies a list of cipher suites allowed
+  ##   letsencrypt:                                         # LetsEncrypt is used to configuration setting up TLS through
+  ##     cachefile: /path/to/cache-file                     # CacheFile specifies cache file to use for lets encrypt certificates and keys.
+  ##     email: emailused@letsencrypt.com                   # Email is the email to use during Let's Encrypt registration
+  ##     hosts: [myregistryaddress.org]                     # Hosts specifies the hosts which are allowed to obtain Let's Encrypt certificates.
+  ##     directoryurl: ""                                   # DirectoryURL points to the CA directory endpoint. If empty, LetsEncrypt is used.
+  debug:                                                    # 	//
+    addr: localhost:5001                                    # Addr specifies the bind address for the debug server.
+    prometheus:                                             # Prometheus configures the Prometheus telemetry endpoint for monitoring purposes.
+      enabled: true                                         # Enabled determines whether Prometheus telemetry is enabled or not.
+      path: /metrics                                        # Path specifies the URL path where the Prometheus metrics are exposed.
+                                                            # The default is "/metrics", but it can be customized here.
+#   headers:                                                # Headers is a set of headers to include in HTTP responses. A common
+                                                            # use case for this would be security headers such as
+                                                            # Strict-Transport-Security. The map keys are the header names, and
+                                                            # the values are the associated header payloads.
 #     X-Content-Type-Options: [nosniff]
-#   http2:
+#   http2:                                                  # HTTP2 configures options for HTTP/2 support.
 #     disabled: false
+#   h2c:                                                    # H2C configures support for HTTP/2 without requiring TLS (HTTP/2 Cleartext).
+#     enabled: false                                        # Enables H2C (HTTP/2 Cleartext). Enable to support HTTP/2 without needing to configure TLS
+                                                            # Useful when deploying the registry behind a load balancer (e.g. Cloud Run)
 
-registry_defaults_notifications: {}
-#   events:
-#     includereferences: true
-#   endpoints:
-#     - name: alistener
-#       disabled: false
-#       url: https://my.listener.com/event
-#       headers: [<http.Header>]
-#       timeout: 1s
-#       threshold: 10
-#       backoff: 1s
-#       ignoredmediatypes:
-#         - application/octet-stream
-#       ignore:
-#         mediatypes:
-#            - application/octet-stream
-#         actions:
-#            - pull
+registry_defaults_notifications: {}                         # Notifications configures multiple http endpoints.
+#   events:                                                 # EventConfig is the configuration for the event format that is sent to each Endpoint.
+#     includereferences: true                               # include reference data in manifest events
+#   endpoints:                                              # Endpoints is a list of http configurations for endpoints that  respond to webhook notifications. In the future, we may allow other kinds of endpoints, such as external queues.
+#     - name: alistener                                     # identifies the endpoint in the registry instance.
+#       disabled: false                                     # disables the endpoint
+#       url: https://my.listener.com/event                  # post url for the endpoint.
+#       headers: [<http.Header>]                            # static headers that should be added to all requests
+#       timeout: 1s                                         # HTTP timeout
+#       threshold: 10                                       # circuit breaker threshold before backing off on failure
+#       backoff: 1s                                         # backoff duration
+#       ignoredmediatypes:                                  # target media types to ignore
+#         - application/octet-stream                        #
+#       ignore:                                             # ignore event types
+#         mediatypes:                                       #
+#            - application/octet-stream                     #
+#         actions:                                          #
+#            - pull                                         #
 
-registry_defaults_redis: {}
-#   addr: localhost:6379
-#   password: asecret
-#   db: 0
-#   dialtimeout: 10ms
-#   readtimeout: 10ms
-#   writetimeout: 10ms
-#   pool:
-#     maxidle: 16
-#     maxactive: 64
-#     idletimeout: 300s
-#   tls:
-#     enabled: false
+registry_defaults_redis: {}                                 #
+#   addr: localhost:6379                                    #
+#   password: asecret                                       #
+#   db: 0                                                   #
+#   dialtimeout: 10ms                                       #
+#   readtimeout: 10ms                                       #
+#   writetimeout: 10ms                                      #
+#   pool:                                                   #
+#     maxidle: 16                                           #
+#     maxactive: 64                                         #
+#     idletimeout: 300s                                     #
+#   tls:                                                    #
+#     enabled: false                                        #
+#     certificate: ""                                       #
+#     key: ""
+#     clientcas:  []
+#
 
-registry_defaults_health:
-  storagedriver:
-    enabled: true
-    interval: 10s
-    threshold: 3
-#   file:
-#     - file: /path/to/checked/file
-#       interval: 10s
-#   http:
-#     - uri: http://server.to.check/must/return/200
-#       headers:
-#         Authorization: [Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==]
-#       statuscode: 200
-#       timeout: 3s
-#       interval: 10s
-#       threshold: 3
-#   tcp:
-#     - addr: redis-server.domain.com:6379
-#       timeout: 3s
-#       interval: 10s
-#       threshold: 3
 
-registry_defaults_proxy: {}
-#  remoteurl: https://registry-1.docker.io
-#  username: [username]
-#  password: [password]
+registry_defaults_health:                                   # Health provides the configuration section for health checks.
+  file: []                                                  # FileCheckers is a list of paths to check
+  #  - file: ""                                             # File is the path to check
+  #    interval: 10s                                        # Interval is the duration in between checks
+  #    threshold: 5                                         # Threshold is the number of times a check must fail to trigger an unhealthy state
+  http: []                                                  # HTTPCheckers is a list of URIs to check
+  #  - uri: http://server.to.check/must/return/200          # URI is the HTTP URI to check
+  #    headers:                                             # Headers lists static headers that should be added to all requests
+  #      Authorization: [Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==]#
+  #    statuscode: 200                                      # StatusCode is the expected status code
+  #    timeout: 3s                                          # Timeout is the duration to wait before timing out the HTTP request
+  #    interval: 10s                                        # Interval is the duration in between checks
+  #    threshold: 3                                         # Threshold is the number of times a check must fail to trigger an unhealthy state
+  tcp: []                                                   # TCPCheckers is a list of URIs to check
+  #  - addr: redis-server.domain.com:6379                   # Addr is the TCP address to check
+  #    timeout: 3s                                          # Timeout is the duration to wait before timing out the TCP connection
+  #    interval: 10s                                        # Interval is the duration in between checks
+  #    threshold: 3                                         # Threshold is the number of times a check must fail to trigger an unhealthy state
+  storagedriver:                                            # StorageDriver configures a health check on the configured storage driver
+    enabled: true                                           # Enabled turns on the health check for the storage driver
+    interval: 10s                                           # Interval is the duration in between checks
+    threshold: 3                                            # Threshold is the number of times a check must fail to trigger an unhealthy state
 
-registry_defaults_compatibility: {}
-#   schema1:
-#     signingkeyfile: /etc/registry/key.json
-#     enabled: true
+registry_defaults_catalog:                                  # Catalog provides configuration options for the /v2/_catalog endpoint.
+  maxentries:                                               # ax number of entries returned by the catalog endpoint.
 
-registry_defaults_validation: {}
-#   manifests:
-#     urls:
-#       allow:
-#         - ^https?://([^/]+\.)*example\.com/
-#       deny:
-#         - ^https?://www\.example\.com/
+registry_defaults_proxy: {}                                 #
+#  remoteurl: https://registry-1.docker.io                  #
+#  username: [username]                                     #
+#  password: [password]                                     #
+
+registry_defaults_compatibility: {}                         #
+#   schema1:                                                #
+#     signingkeyfile: /etc/registry/key.json                #
+#     enabled: true                                         #
+
+registry_defaults_validation: {}                            #
+#   manifests:                                              #
+#     urls:                                                 #
+#       allow:                                              #
+#         - ^https?://([^/]+\.)*example\.com/               #
+#       deny:                                               #
+#         - ^https?://www\.example\.com/                    #
+
+registry_defaults_policy:                                   # Policy defines configuration options for managing registry policies.
+  repository: []                                            # Repository configures policies for repositories
 
 # ----------------------------------------------------------------------------------------
 

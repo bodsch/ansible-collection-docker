@@ -1,25 +1,26 @@
 {{ ansible_managed | comment }}
 
 [Unit]
-Description      = registry, the Open Source Registry implementation for storing and distributing container images using the OCI Distribution Specification
-After            = network-online.target
+Description         = registry, the Open Source Registry implementation for storing and distributing container images using the OCI Distribution Specification
+After               = network-online.target
 
 [Service]
-Type             = simple
-Environment      = "GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}"
-EnvironmentFile  = {{ registry_defaults_directory }}/registry
+Type                = simple
+Environment         = "GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+EnvironmentFile     = {{ registry_defaults_directory }}/registry
 
-User             = {{ registry_system_user }}
-Group            = {{ registry_system_group }}
+User                = {{ registry_system_user }}
+Group               = {{ registry_system_group }}
 
-ExecReload       = /bin/kill -HUP $MAINPID
-ExecStart        = /usr/bin/registry $OPTIONS
+ExecReload          = /bin/kill -HUP $MAINPID
+ExecStart           = /usr/bin/registry $OPTIONS
 
-LimitNOFILE      = 65000
-SyslogIdentifier = registry
-Restart          = on-failure
-RestartSec       = 30s
-RestartSteps     = 20
+LimitNOFILE         = 65000
+SyslogIdentifier    = registry
+Restart             = on-failure
+RestartSec          = 30s
+RestartMaxDelaySec  = 60s
+RestartSteps        = 10
 
 [Install]
-WantedBy         = multi-user.target
+WantedBy            = multi-user.target

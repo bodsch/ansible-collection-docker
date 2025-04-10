@@ -1,5 +1,9 @@
 ---
 
+- name: define registry data directory
+  ansible.builtin.set_fact:
+    registry_data_dir: "{{ registry_storage.filesystem.rootdirectory | default('/var/lib/registry') }}"
+
 - name: detect binary file for registry on {{ registry_ui_delegate_to }}
   become: false
   delegate_to: "{{ registry_delegate_to }}"
