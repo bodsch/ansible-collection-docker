@@ -113,7 +113,7 @@ def test_directories(host, get_vars):
     root_dir = get_vars.get("registry_storage", {}).get("filesystem", {}).get("rootdirectory", {})
 
     directories = []
-    directories.append("/etc/docker/registry")
+    directories.append(get_vars.get("registry_config_dir"))
 
     if root_dir:
         directories.append(root_dir)
