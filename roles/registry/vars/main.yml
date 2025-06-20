@@ -64,6 +64,9 @@ registry_defaults_storage:                                  # Type returns the s
 #       dryrun: false
 #     readonly:
 #       enabled: false
+#
+#   tag:
+#     concurrencylimit: 8
 
 #   azure:
 #     accountname: accountname
@@ -245,15 +248,22 @@ registry_defaults_notifications: {}                         # Notifications conf
 
 registry_defaults_redis: {}                                 #
 #   addr: localhost:6379                                    #
+#   addrs: []                                               # since version 3.0.0
+#     - localhost:6379                                      #
 #   password: asecret                                       #
 #   db: 0                                                   #
 #   dialtimeout: 10ms                                       #
 #   readtimeout: 10ms                                       #
 #   writetimeout: 10ms                                      #
-#   pool:                                                   #
+#   pool:                                                   # replaced: https://github.com/distribution/distribution/commit/b63cbb33181f9a917c226c59f15e284b96d87bd8
 #     maxidle: 16                                           #
 #     maxactive: 64                                         #
 #     idletimeout: 300s                                     #
+#
+#   maxidleconns: 16                                        # since version 3.0.0
+#   poolsize: 64                                            #
+#   connmaxidletime: 300s                                   #
+#
 #   tls:                                                    #
 #     enabled: false                                        #
 #     certificate: ""                                       #

@@ -198,6 +198,9 @@ notifications:
 
 {# https://github.com/distribution/distribution/blob/main/docs/configuration.md#redis #}
 {%- if registry_redis is defined and registry_redis | count > 0 %}
+  {% if registry_version is version_compare('3.0', '>=') %}
+    {% set registry_redis = registry_redis | bodsch.docker.registry_migrate('redis', registry_version) %}
+  {% endif %}
 redis:
   {{ registry_redis | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif %}
