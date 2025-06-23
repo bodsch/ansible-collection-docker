@@ -1,6 +1,0 @@
----
-
-collections:
-  - name: bodsch.core
-  - name: bodsch.scm
-    version: ">=1.4.2"

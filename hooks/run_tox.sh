@@ -13,12 +13,6 @@ echo ""
 echo "global"
 ${current_dir}/hooks/manage_collections.py
 
-# if [ -e collections.yml ]
-# then
-#   echo ""
-#   ${current_dir}/hooks/manage_collections.py
-# fi
-
 if [[ ! -z "${COLLECTION_ROLE// }" ]]
 then
   if [ -d "roles/${COLLECTION_ROLE}" ]
@@ -26,7 +20,13 @@ then
     echo "- ${COLLECTION_ROLE} - ${COLLECTION_SCENARIO}"
     echo ""
 
-    cp test-requirements.txt tox.ini "roles/${COLLECTION_ROLE}/"
+    for i in requirements.txt test-requirements.txt tox.ini
+    do
+      if [ -e "${i}" ]
+      then
+        cp "${i}" "roles/${COLLECTION_ROLE}/"
+      fi
+    done
 
     pushd "roles/${COLLECTION_ROLE}" > /dev/null
 
@@ -48,7 +48,13 @@ else
     echo "- ${role} - ${COLLECTION_SCENARIO}"
     echo ""
 
-    cp test-requirements.txt tox.ini "roles/${COLLECTION_ROLE}/"
+    for i in requirements.txt test-requirements.txt tox.ini
+    do
+      if [ -e "${i}" ]
+      then
+        cp "${i}" "roles/${COLLECTION_ROLE}/"
+      fi
+    done
 
     pushd roles/${role} > /dev/null
 

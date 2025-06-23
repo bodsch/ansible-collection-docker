@@ -24,8 +24,9 @@ tags:
 
 dependencies:
   bodsch.core: ">=2.2.1"
-  bodsch.scm: ">=1.4.2"
+  bodsch.scm: ">=1.4.6"
   community.docker: "*"
+  community.general: ">=6.5.0"
 
 repository: https://github.com/bodsch/ansible-collection-docker
 documentation: https://github.com/bodsch/ansible-collection-docker/README.md
