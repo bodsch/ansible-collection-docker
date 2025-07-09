@@ -33,25 +33,15 @@ class AnsibleCollectionManager():
     def run(self, required: List[dict] = None):
         """
         """
-        # required = []
-        #
-        # if Path(self.requirements_file).exists():
-        #
-        #     print("role requirements:")
-        #     required += self.load_required_collections(self.requirements_file)
-        #
-        # if self.tox_scenario:
-        #     print("scenario requirements:")
-        #     _file = os.path.join("molecule", self.tox_scenario, "requirements.yml")
-        #     if os.path.exists(_file):
-        #         required += self.load_required_collections(_file)
-        #
-        # if Path("galaxy.yml").exists():
-        #     """
-        #         eine collection
-        #     """
-        #     print("collection requirements:")
-        #     required += self.load_collection_dependencies()
+        required.sort(key=lambda x: x['name'])
+        unique = []
+        seen = set()
+        for item in required:
+            if item['name'] not in seen:
+                unique.append(item)
+                seen.add(item['name'])
+
+        required = unique
 
         installed = self.get_installed_collections()
 
@@ -192,5 +182,33 @@ class AnsibleCollectionManager():
             Installiert eine Collection über ansible-galaxy (ohne Versionsparameter).
         """
         logging.info(f"📦 Install ansible-galaxy collection {name} ...")
-        subprocess.run(["ansible-galaxy", "collection",
-                       "install", "--force", name], check=True)
+
+        cmd = [
+            "ansible-galaxy",
+            "collection",
+            "install",
+            "--force",
+            name
+        ]
+
+        try:
+            subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+        except subprocess.CalledProcessError as e:
+            """
+            """
+            cmd_str = ' '.join(cmd)
+            logging.error("Command:")
+            logging.error(f"  {cmd_str}")
+            print("")
+            logging.error('   STDOUT:')
+            logging.error(f"  {e.stdout.strip()}")
+            print("")
+            logging.error('   STDERR:')
+            logging.error(f"  {e.stderr.strip()}")
+            print("")
+            # sys.exit(1)

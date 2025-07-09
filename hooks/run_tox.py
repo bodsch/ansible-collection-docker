@@ -14,7 +14,8 @@ from contextlib import contextmanager
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-VERSION = "2.1.0"
+VERSION = "2.1.1"
+
 
 @contextmanager
 def chdir(path: Path):
@@ -221,8 +222,8 @@ class ToxRunner:
         if self.tox_test in ["converge", "destroy", "test", "verify"]:
             """
             """
-            print(
-                f"[INFO] Running tests for role {role_name} and scenario {self.scenario}\n")
+            logging.info(
+                f"Running tests for role {role_name} and scenario {self.scenario}\n")
             # env = self.filtered_env
             env = os.environ.copy()
             with chdir(role_path):
@@ -281,12 +282,33 @@ class ToxRunner:
             cmd += ["--scenario-name", scenario]
 
         try:
-            subprocess.run(cmd, cwd=str(cwd), env=env, check=True)
+            subprocess.run(
+                cmd,
+                cwd=str(cwd),
+                env=env,
+                capture_output=True,
+                text=True,
+                check=True
+            )
             print("")
         except subprocess.CalledProcessError as e:
-            logging.error(f"tox failed in {cwd}: {e}")
+            """
+            """
+            cmd_str = ' '.join(cmd)
+            logging.error(f"tox failed in {cwd}")
+            logging.error("Command:")
+            logging.error(f"  {cmd_str}")
             print("")
+            logging.error('   STDOUT:')
+            logging.error(f"  {e.stdout.strip()}")
+            print("")
+            logging.error('   STDERR:')
+            logging.error(f"  {e.stderr.strip()}")
+            print("")
+
             sys.exit(1)
+
+        logging.info("successfuly.")
 
 
 if __name__ == "__main__":
