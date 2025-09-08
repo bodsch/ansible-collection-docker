@@ -7,21 +7,28 @@
     - name: add docker apt key
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/debian/gpg
-        dest: /usr/share/keyrings/docker.gpg
+        dest: /usr/share/keyrings/docker-archive-keyring.asc
         mode: '0644'
       register: docker_apt_key
+      notify:
+        - dearmor docker apt key
 
     - name: add docker apt repository
+      become: true
       ansible.builtin.copy:
         dest: /etc/apt/sources.list.d/docker.sources
         content: |
           Types: deb
-          URIs: https://download.docker.com/linux/debian
-          Suites: trixie
+          URIs: https://download.docker.com/linux/{{ ansible_distribution | lower }}
+          Suites: {{ ansible_distribution_release }}
+          Architectures: amd64
           Components: stable
-          Signed-By: /usr/share/keyrings/docker.gpg
+          Signed-By: /usr/share/keyrings/docker-archive-keyring.gpg
         mode: '0644'
       register: docker_apt_repository
+
+    - name: flush handlers at this point
+      ansible.builtin.meta: flush_handlers
 
     - name: update package cache
       ansible.builtin.package:

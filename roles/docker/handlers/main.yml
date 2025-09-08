@@ -7,6 +7,16 @@
   when:
     - ansible_os_family | lower == 'archlinux'
 
+- name: dearmor docker apt key
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      gpg
+        --dearmor
+        --yes
+        --output /usr/share/keyrings/docker-archive-keyring.gpg
+        /usr/share/keyrings/docker-archive-keyring.asc
+
 - name: restart docker
   ansible.builtin.service:
     name: docker
