@@ -346,6 +346,40 @@ container_11:
       replicator.password: 'RSActgjk3shTcgosJzn4vT2.Z9i47QLV'
       replicator.domain: 'localhost'
       replicator.tmp_dir: 'var/tmp'
+    config_files:
+      - name: configuration.yaml
+        type: yaml
+        data: |
+          # Loads default set of integrations. Do not remove.
+          default_config:
+
+          # Load frontend themes from the themes folder
+          frontend:
+            themes: !include_dir_merge_named themes
+
+          automation: !include automations.yaml
+          script: !include scripts.yaml
+          scene: !include scenes.yaml
+          logger: !include logger.yaml
+      - name: configuration.yaml
+        type: yaml
+        data:
+          version: 4
+          mqtt:
+            base_topic: zigbee2mqtt
+            server: mqtt://mosquitto:1883
+          serial:
+            port: /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231008090022-if00
+            adapter: zstack
+          advanced:
+            channel: 11
+            network_key: GENERATE
+            pan_id: GENERATE
+            ext_pan_id: GENERATE
+          frontend:
+            enabled: true
+          homeassistant:
+            enabled: true
     mounts:
       - source: /tmp/busybox-11/testing1
         target: /var/tmp/testing1

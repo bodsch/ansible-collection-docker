@@ -8,13 +8,16 @@
 from __future__ import absolute_import, division, print_function
 import os
 import shutil
+import tempfile
+from pathlib import Path
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
 from ansible_collections.bodsch.core.plugins.module_utils.checksum import Checksum
-# from ansible_collections.bodsch.core.plugins.module_utils.diff import SideBySide
 from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
 from ansible_collections.bodsch.core.plugins.module_utils.template.template import write_template
+
+from ansible_collections.bodsch.docker.plugins.module_utils.config_backends import Writer, JSONWriter, YAMLWriter, TOMLWriter, INIWriter
 
 # ---------------------------------------------------------------------------------------
 
@@ -96,9 +99,17 @@ class ContainerEnvironments(object):
             environments = c.get("environments", {})
             properties = c.get("properties", {})
             property_files = c.get("property_files", [])
+            config_files = c.get("config_files", [])
             defined_environments = (len(environments) > 0)
             defined_properties = (len(properties) > 0)
             defined_property_files = (len(property_files) > 0)
+            defined_config_files = (len(config_files) > 0)
+
+            self.module.log(f"- name: {name}")
+            self.module.log(f"  environments: {environments}")
+            self.module.log(f"  properties: {properties}")
+            self.module.log(f"  property_files: {property_files}")
+            self.module.log(f"  config_files: {config_files}")
 
             tmp_directory = os.path.join(self.tmp_directory, name)
 
@@ -151,6 +162,36 @@ class ContainerEnvironments(object):
 
                 if defined_property_files:
                     _ = c.pop("property_files")
+
+            if defined_config_files:
+                """
+                  write properties
+                """
+                config_filename = name
+
+                # config_files.append({
+                #     "name": config_filename,
+                #     "data": data
+                # })
+
+                for cfg in config_files:
+                    config_filename = cfg.get("name", None)
+                    config_data = cfg.get("data", {})
+                    config_type = cfg.get("type", "yaml")
+
+                    _changed, difference = self._write_config(
+                        container_name=name,
+                        filename=config_filename,
+                        config_type=config_type,
+                        data=config_data
+                    )
+
+                    if _changed:
+                        p_changed = True
+                        state.append(config_filename)
+
+                if defined_config_files:
+                    _ = c.pop("config_files")
 
             if e_changed or p_changed:
                 changed = True
@@ -251,6 +292,51 @@ class ContainerEnvironments(object):
 
         return changed, difference
 
+    def _write_config(self, container_name, filename, config_type = "yaml", data = {}):
+        """
+        """
+        # self.module.log(f"ContainerEnvironments::_write_config(container_name: {container_name}, filename:"
+        # f"{filename}, config_type: {config_type}, data)")
+
+        tmp_directory = os.path.join(self.tmp_directory, container_name)
+
+        checksum_file = os.path.join(self.base_directory, container_name, f"{filename}.checksum")
+        data_file = os.path.join(self.base_directory, container_name, filename)
+        difference = ""
+
+        if os.path.exists(checksum_file):
+            os.remove(checksum_file)
+
+        if len(data) == 0:
+            if os.path.exists(data_file):
+                os.remove(data_file)
+
+            return False, difference
+
+        tmp_file = os.path.join(tmp_directory, filename)
+
+        config_writer = self.resolve_writer(config_type)
+        text = config_writer.dump(data)
+
+        # atomar schreiben
+        with tempfile.NamedTemporaryFile("w", delete=False, dir=tmp_directory, encoding="utf-8") as tmp:
+            tmp.write(text)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+            tmp_path = Path(tmp.name)
+
+            new_checksum = self.checksum.checksum_from_file(tmp_path)
+            old_checksum = self.checksum.checksum_from_file(data_file)
+
+            changed = not (new_checksum == old_checksum)
+
+            if changed:
+                if self.diff:
+                    difference = self.__create_diff(data_file, tmp_file)
+                shutil.move(tmp_path, data_file)
+
+        return changed, difference
+
     def __write_template(self, env, data, data_file, checksum = None, checksum_file = None):
         """
         """
@@ -268,6 +354,21 @@ class ContainerEnvironments(object):
         """
         """
         return None
+
+    def resolve_writer(self, file_type: str) -> Writer:
+        t = file_type.strip().lower()
+
+        if t in ("yaml", "yml"):
+            return YAMLWriter()
+        if t == "json":
+            return JSONWriter()
+        if t == "toml":
+            return TOMLWriter()
+        if t == "ini":
+            return INIWriter()
+
+        raise ValueError(f"Unbekannter type '{file_type}'. Erlaubt: yaml|yml|json|toml|ini")
+
 
 # ===========================================
 # Module execution.

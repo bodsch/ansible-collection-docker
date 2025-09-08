@@ -4,12 +4,11 @@
   ansible.builtin.import_tasks: prepare.yml
   tags:
     - docker
-    - always
 
 - name: repositories
   ansible.builtin.import_tasks: repositories.yml
   when:
-    - ansible_os_family | lower in ['debian', 'redhat']
+    - ansible_os_family | lower == 'debian'
   tags:
     - docker_repo
 

@@ -4,44 +4,30 @@
   when:
     - ansible_os_family | lower == 'debian'
   block:
-    - name: add apt signing key (debian)
-      ansible.builtin.apt_key:
-        id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-        url: https://download.docker.com/linux/ubuntu/gpg
-      become: true
+    - name: add docker apt key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/debian/gpg
+        dest: /usr/share/keyrings/docker.gpg
+        mode: '0644'
+      register: docker_apt_key
 
-    - name: install official docker repositories for debian based
-      ansible.builtin.template:
-        src: apt/docker-ce.list.j2
-        dest: /etc/apt/sources.list.d/docker-ce.list
-        mode: "0644"
-        owner: root
-        group: root
+    - name: add docker apt repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/docker.sources
+        content: |
+          Types: deb
+          URIs: https://download.docker.com/linux/debian
+          Suites: trixie
+          Components: stable
+          Signed-By: /usr/share/keyrings/docker.gpg
+        mode: '0644'
+      register: docker_apt_repository
 
-- name: redhat based
-  when:
-    - ansible_os_family | lower == 'redhat'
-  block:
-    - name: install official docker repositories for redhat based
-      ansible.builtin.yum_repository:
-        name: "docker-ce-{{ item.channel }}"
-        description: Docker Repository Stable Channel
-        baseurl: "https://download.docker.com/linux/centos/$releasever/$basearch/{{ item.channel }}"
-        gpgkey: https://download.docker.com/linux/centos/gpg
-        gpgcheck: true
-        enabled: "{{ item.enabled }}"
-      loop:
-        - channel: stable
-          enabled: "{{ docker_repo.channel.stable_enabled }}"
-        - channel: nightly
-          enabled: "{{ docker_repo.channel.nightly_enabled }}"
-        - channel: test
-          enabled: "{{ docker_repo.channel.test_enabled }}"
-      loop_control:
-        label: " {{ item.channel }}"
-
-- name: update package cache
-  ansible.builtin.package:
-    update_cache: true
+    - name: update package cache
+      ansible.builtin.package:
+        update_cache: true
+      when:
+        - docker_apt_key.changed or
+          docker_apt_repository.changed
 
 ...

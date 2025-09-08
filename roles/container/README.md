@@ -323,6 +323,60 @@ To do this, a list must be created under `property_files`.
 If no `properties` is defined here, the associated file is deleted.
 
 
+#### config files
+
+All `config_files` entries are persisted to a separate file on the target system.
+
+E.g. under `/opt/container/${CONTAINER_NAME}/${CONFIG_NAME}`
+
+The target directory for persistence can be customized via `container_env_directory`.
+
+
+**For example:**
+
+```yaml
+
+    config_files:
+      - name: configuration.yaml
+        type: yaml
+        data: |
+          # Loads default set of integrations. Do not remove.
+          default_config:
+
+          # Load frontend themes from the themes folder
+          frontend:
+            themes: !include_dir_merge_named themes
+
+          automation: !include automations.yaml
+          script: !include scripts.yaml
+          scene: !include scenes.yaml
+          logger: !include logger.yaml    
+
+      - name: configuration.yaml
+        type: yaml
+        data:
+          version: 4
+          mqtt:
+            base_topic: zigbee2mqtt
+            server: mqtt://mosquitto:1883
+          serial:
+            port: /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231008090022-if00
+            adapter: zstack
+          advanced:
+            channel: 11
+            network_key: GENERATE
+            pan_id: GENERATE
+            ext_pan_id: GENERATE
+          frontend:
+            enabled: true
+          homeassistant:
+            enabled: true
+```
+
+The following file types should be supported: `yaml`, `json`, `toml`, `ini`
+
+
+
 #### volumes and mounts
 
 ##### custom fileds for volumes

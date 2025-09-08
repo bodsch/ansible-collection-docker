@@ -140,6 +140,8 @@ class FilterModule():
     def container_filter(self, data, state):
         """
         """
+        display.v(f"container_filter(data: {data}, state: {state})")
+
         result = {}
 
         _data = data.copy()
@@ -168,7 +170,7 @@ class FilterModule():
             volumes=container_volumes,
             environnments=container_env,
         )
-
+        display.v(f"= return : {result}")
         return result
 
     def filter_names(self, data):
@@ -181,7 +183,7 @@ class FilterModule():
         """
         return self._get_keys_from_dict(data, 'image')
 
-    def filter_environnments(self, data, want_list = ["name", "hostname", "environments", "properties", "property_files"]):
+    def filter_environnments(self, data, want_list = ["name", "hostname", "environments", "properties", "property_files", "config_files"]):
         """
         """
         # display.v(f"filter_environnments(self, data, {want_list})")

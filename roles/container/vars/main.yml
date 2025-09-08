@@ -7,9 +7,11 @@ container_packages: []
 container_python_extra_args: []
 container_python_packages:
   - name: ruamel.yaml
-    version: 0.17
+    compare_direction: ">="
+    version: "0.17"
   - name: jinja2
-    version: 3.0.3
+    compare_direction: ">="
+    version: "3.0.3"
 
 container_update_needed: false
 

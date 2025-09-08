@@ -81,7 +81,7 @@
     container_environnments: "{{ container_information.environnments }}"
     container_images_needed: "{{ container_information.images }}"
   when:
-    - container_information | default({})
+    - container_information | default({}) | count > 0
 
 - name: validate container mountpoints
   when:
