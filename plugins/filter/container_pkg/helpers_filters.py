@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Union
 
-from ansible.errors import AnsibleFilterError
 from ansible.utils.display import Display
 
 display = Display()

@@ -1,8 +1,6 @@
-import itertools
 from typing import Any, Dict, List
 
 from ansible.utils.display import Display
-from ruamel.yaml import YAML
 
 from .base import ContainerBase
 
@@ -36,7 +34,6 @@ class MountFilters(ContainerBase):
         """
         display.vv("MountFilters::container_volumes(data)")
 
-        yaml = YAML()  # currently unused, but kept for potential future parsing logic
         result: List[Dict[str, str]] = []
 
         for container in data:

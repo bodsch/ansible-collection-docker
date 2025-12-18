@@ -17,7 +17,7 @@ should inherit from ContainerBase to reuse these methods consistently.
 """
 
 import itertools
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ansible.utils.display import Display
 

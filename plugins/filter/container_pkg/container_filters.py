@@ -1,9 +1,8 @@
 import itertools
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set
 
 from ansible.errors import AnsibleFilterError
 from ansible.utils.display import Display
-from ruamel.yaml import YAML
 
 display = Display()
 
@@ -203,7 +202,6 @@ class ContainerFilters:
         """
         display.vv("ContainerFilters::container_volumes(data)")
 
-        yaml = YAML()
         result: List[Dict[str, str]] = []
 
         for container in data:
