@@ -8,39 +8,193 @@
 from __future__ import absolute_import, division, print_function
 
 from ansible.module_utils.basic import AnsibleModule
-from ruamel.yaml import YAML
+from ansible_collections.bodsch.core.plugins.module_utils.directory import (
+    create_directory_tree,
+    current_state,
+)
 from ansible_collections.bodsch.core.plugins.module_utils.lists import compare_two_lists
-from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory_tree, current_state
+from ruamel.yaml import YAML
 
 # ---------------------------------------------------------------------------------------
 
-DOCUMENTATION = """
+DOCUMENTATION = r"""
+---
 module: container_mounts
-version_added: 1.0.0
+version_added: "1.0.0"
 author: "Bodo Schulz (@bodsch) <bodo@boone-schulz.de>"
 
-short_description: TBD
-
+short_description: Manage and migrate container mounts and volumes.
 description:
-    - TBD
+  - This module processes and manages container volume and mount definitions.
+  - It ensures that required directories exist on the host and are created with the correct owner, group, and mode.
+  - The module supports migrating legacy Docker C(volumes) entries into the new C(mounts) format.
+  - It also filters out invalid or system paths (e.g., C(/sys), C(/dev), or socket/config files).
+  - After directory creation, ownership and permissions are verified and reported if changed.
+  - The module is idempotent and reports only when directories are created or modified.
+
+options:
+  data:
+    description:
+      - A list of container configuration dictionaries.
+      - Each element should define mount or volume information for one container.
+    required: true
+    type: list
+  volumes:
+    description:
+      - Whether to process legacy Docker-style C(volumes) entries.
+      - If C(true), the module will migrate legacy volume definitions into mount definitions.
+    required: true
+    type: bool
+  mounts:
+    description:
+      - Whether to process new-style C(mounts) entries.
+      - If C(true), the module reads and applies mount definitions from the input data.
+    required: true
+    type: bool
+  debug:
+    description:
+      - Enables debug mode for verbose logging of mount and volume handling.
+    required: false
+    type: bool
+    default: false
+  owner:
+    description:
+      - Default owner for created directories.
+      - Can be overridden by per-volume or per-mount C(source_handling) definitions.
+    required: false
+    type: str
+  group:
+    description:
+      - Default group for created directories.
+      - Can be overridden by per-volume or per-mount C(source_handling) definitions.
+    required: false
+    type: str
+  mode:
+    description:
+      - Default file permission mode for created directories (octal format).
+      - Can be overridden by per-volume or per-mount C(source_handling) definitions.
+    required: false
+    type: str
+notes:
+  - This module does not modify or remove files inside existing directories.
+  - System directories such as C(/sys), C(/dev), and C(/run) are automatically excluded.
+  - File suffixes like C(.sock), C(.conf), and C(.pid) are ignored during processing.
+requirements:
+  - Python >= 3.6
+  - ruamel.yaml
+  - bodsch.core collection
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
+# Example 1: Create missing directories for container mounts
+- name: Ensure directories for container mounts exist
+  bodsch.docker.container_mounts:
+    data:
+      - name: web
+        mounts:
+          - source: /data/web
+            target: /var/www/html
+            source_handling:
+              create: true
+              owner: "1000"
+              group: "1000"
+              mode: "0755"
+    mounts: true
+    volumes: false
+
+# Example 2: Migrate legacy volumes to mounts and ensure directories exist
+- name: Migrate old volumes and create host directories
+  bodsch.docker.container_mounts:
+    data:
+      - name: database
+        volumes:
+          - "/srv/db:/var/lib/mysql|{owner='999',group='999',mode='0700'}"
+    mounts: false
+    volumes: true
+
+# Example 3: Handle both mounts and legacy volumes
+- name: Ensure directories for mounts and migrate volumes
+  bodsch.docker.container_mounts:
+    data:
+      - name: redis
+        mounts:
+          - source: /opt/redis
+            target: /data
+            source_handling:
+              create: true
+              owner: "1001"
+              mode: "0750"
+        volumes:
+          - "/cache:/tmp/cache|{owner='1001',mode='0755'}"
+    mounts: true
+    volumes: true
+
+# Example 4: Debug mode for troubleshooting directory creation
+- name: Enable debug mode for container mounts
+  bodsch.docker.container_mounts:
+    data:
+      - name: test-container
+        mounts:
+          - source: /mnt/test
+            target: /opt/test
+            source_handling:
+              create: true
+    mounts: true
+    volumes: false
+    debug: true
 """
 
-RETURN = """
+RETURN = r"""
+changed:
+  description: Indicates whether any directories were created or modified.
+  returned: always
+  type: bool
+  sample: true
+
+failed:
+  description: Whether the module execution failed.
+  returned: always
+  type: bool
+  sample: false
+
+msg:
+  description:
+    - A message describing the module’s result.
+    - Can be "nothing to do" or a description of created directories.
+  returned: always
+  type: str
+  sample: "changed or created directories"
+
+created_directories:
+  description:
+    - List of directories that were created or updated during execution.
+    - Only returned when C(changed=true).
+  returned: when changed
+  type: str
+  sample: |
+    - /data/web
+    - /srv/db
+    - /opt/redis
+
+diff:
+  description:
+    - List of differences between pre- and post-state directory trees.
+    - Each entry shows directories that were created, updated, or removed.
+  returned: when changed
+  type: list
+  sample:
+    - "/data/web: owner changed from root to 1000"
+    - "/srv/db: mode changed from 0755 to 0700"
 """
 
 # ---------------------------------------------------------------------------------------
 
 
 class ContainerMounts(object):
-    """
-    """
+    """ """
 
     def __init__(self, module):
-        """
-        """
+        """ """
         self.module = module
 
         self.data = module.params.get("data")
@@ -52,31 +206,23 @@ class ContainerMounts(object):
         self.mode = module.params.get("mode")
 
         self.volume_block_list_ends = (
-            '.pid',
-            '.sock',
-            '.socket',
-            '.conf',
-            '.config',
+            ".pid",
+            ".sock",
+            ".socket",
+            ".conf",
+            ".config",
         )
         self.volume_block_list_starts = (
-            '/sys',
-            '/dev',
-            '/run',
+            "/sys",
+            "/dev",
+            "/run",
         )
 
-        self.read_only = {
-            'rw': False,
-            'ro': True
-        }
+        self.read_only = {"rw": False, "ro": True}
 
     def run(self):
-        """
-        """
-        result = dict(
-            changed=False,
-            failed=True,
-            msg="initial"
-        )
+        """ """
+        result = dict(changed=False, failed=True, msg="initial")
 
         all_mounts = []
         all_volumes = []
@@ -92,44 +238,42 @@ class ContainerMounts(object):
         full_list = migrated_volumes + all_mounts
 
         if len(full_list) == 0:
-            return dict(
-                changed=False,
-                failed=False,
-                msg="nothing to do"
-            )
+            return dict(changed=False, failed=False, msg="nothing to do")
 
         current_state = self.__analyse_directories(full_list)
         create_directory_tree(full_list, current_state)
         final_state = self.__analyse_directories(full_list)
 
-        changed, diff, error_msg = compare_two_lists(list1=current_state, list2=final_state)
+        changed, diff, error_msg = compare_two_lists(
+            list1=current_state, list2=final_state
+        )
 
         # self.module.log(f"   changed: {changed}, diff: {diff}")
 
         # TODO
         # remove custom fields from 'volumes'
         if changed:
-            result['msg'] = "changed or created directories"
+            result["msg"] = "changed or created directories"
             msg = ""
             for i in diff:
                 msg += f"- {i}\n"
-            result['created_directories'] = msg
+            result["created_directories"] = msg
         else:
-            result['msg'] = "nothing to do"
+            result["msg"] = "nothing to do"
 
-        result['changed'] = changed
-        result['failed'] = False
+        result["changed"] = changed
+        result["failed"] = False
 
         return result
 
     def __volumes(self):
         """
-          return all volume definitions
+        return all volume definitions
         """
         all_volumes = []
 
         for d in self.data:
-            _v = d.get('volumes', [])
+            _v = d.get("volumes", [])
             if len(_v) > 0:
                 all_volumes.append(_v)
 
@@ -137,23 +281,22 @@ class ContainerMounts(object):
 
     def __mounts(self):
         """
-          get only mountspoint when we add source_handling and set create to True
+        get only mountspoint when we add source_handling and set create to True
         """
         all_mounts = []
 
         for d in self.data:
-            """
-            """
+            """ """
             if self.debug:
                 self.module.log(f"- {d.get('name')}")
 
-            mount_defintions = d.get('mounts', [])
+            mount_defintions = d.get("mounts", [])
 
             for mount in mount_defintions:
                 if self.debug:
                     self.module.log(f"  mount: {mount}")
 
-                source_handling = mount.get('source_handling', {}).get("create", False)
+                source_handling = mount.get("source_handling", {}).get("create", False)
 
                 if len(mount_defintions) > 0 and source_handling:
                     all_mounts.append(mount)
@@ -162,30 +305,30 @@ class ContainerMounts(object):
 
     def __migrate_volumes_to_mounts(self, volumes):
         """
-            migrate old volume definition into mount
-            ignore some definitions like:
-              - *.sock
-              - *.conf
-            etc. see self.volume_block_list_ends and self.volume_block_list_starts!
+        migrate old volume definition into mount
+        ignore some definitions like:
+          - *.sock
+          - *.conf
+        etc. see self.volume_block_list_ends and self.volume_block_list_starts!
 
-            for example:
-              from: /tmp/testing5:/var/tmp/testing5|{owner="1001",mode="0700",ignore=True}
-              to:
-              - source: /tmp/testing5
-                target: /var/tmp/testing5
-                source_handling:
-                  create: false
-                  owner: "1001"
-                  mode: "0700"
+        for example:
+          from: /tmp/testing5:/var/tmp/testing5|{owner="1001",mode="0700",ignore=True}
+          to:
+          - source: /tmp/testing5
+            target: /var/tmp/testing5
+            source_handling:
+              create: false
+              owner: "1001"
+              mode: "0700"
 
-              from: /tmp/testing3:/var/tmp/testing3:rw|{owner="999",group="1000"}
-              to:
-              - source: /tmp/testing3
-                target: /var/tmp/testing3
-                source_handling:
-                  create: true
-                  owner: "999"
-                  group: "1000"
+          from: /tmp/testing3:/var/tmp/testing3:rw|{owner="999",group="1000"}
+          to:
+          - source: /tmp/testing3
+            target: /var/tmp/testing3
+            source_handling:
+              create: true
+              owner: "999"
+              group: "1000"
         """
         if self.debug:
             self.module.log("__migrate_volumes_to_mounts(volumes)")
@@ -195,9 +338,9 @@ class ContainerMounts(object):
 
         def custom_fields(d):
             """
-              returns only custom fileds as json
+            returns only custom fileds as json
             """
-            d = d.replace('=', ': ')
+            d = d.replace("=", ": ")
 
             if d.startswith("[") and d.endswith("]"):
                 d = d.replace("[", "")
@@ -211,7 +354,7 @@ class ContainerMounts(object):
             for key, value in code.items():
                 # transform ignore=True into create=False
                 if key == "ignore":
-                    code.insert(0, 'create', not value)
+                    code.insert(0, "create", not value)
                     del code[key]
 
             if self.debug:
@@ -221,20 +364,19 @@ class ContainerMounts(object):
 
         for d in volumes:
             for entry in d:
-                """
-                """
+                """ """
                 if self.debug:
                     self.module.log(f"  - {entry}")
 
                 read_mode = None
                 c_fields = dict()
-                values = entry.split('|')
+                values = entry.split("|")
 
                 if len(values) == 2 and values[1]:
                     c_fields = custom_fields(values[1])
                     entry = values[0]
 
-                values = entry.split(':')
+                values = entry.split(":")
                 count = len(values)
 
                 local_volume = values[0]
@@ -243,21 +385,21 @@ class ContainerMounts(object):
                 if count == 3 and values[2]:
                     read_mode = values[2]
 
-                valid = (local_volume.endswith(self.volume_block_list_ends) or local_volume.startswith(
-                    self.volume_block_list_starts))
+                valid = local_volume.endswith(
+                    self.volume_block_list_ends
+                ) or local_volume.startswith(self.volume_block_list_starts)
 
                 if not valid:
-                    """
-                    """
+                    """ """
                     res = dict(
-                        source=local_volume,   # values[0],
+                        source=local_volume,  # values[0],
                         target=remote_volume,  # values[1],
                         type="bind",
-                        source_handling=c_fields
+                        source_handling=c_fields,
                     )
 
                     if read_mode is not None:
-                        res['read_only'] = self.read_only.get(read_mode)
+                        res["read_only"] = self.read_only.get(read_mode)
 
                     result.append(res)
 
@@ -265,15 +407,14 @@ class ContainerMounts(object):
 
     def __analyse_directories(self, directory_tree):
         """
-          set current owner, group and mode to source entry
+        set current owner, group and mode to source entry
         """
         result = []
         for entry in directory_tree:
-            """
-            """
+            """ """
             res = {}
 
-            source = entry.get('source')
+            source = entry.get("source")
             current_owner = None
             current_group = None
             current_mode = None
@@ -282,11 +423,13 @@ class ContainerMounts(object):
 
             current_owner, current_group, current_mode = current_state(source)
 
-            res[source].update({
-                "owner": current_owner,
-                "group": current_group,
-                "mode": current_mode,
-            })
+            res[source].update(
+                {
+                    "owner": current_owner,
+                    "group": current_group,
+                    "mode": current_mode,
+                }
+            )
 
             result.append(res)
 
@@ -296,37 +439,17 @@ class ContainerMounts(object):
 # ===========================================
 # Module execution.
 
+
 def main():
-    """
-    """
+    """ """
     args = dict(
-        data=dict(
-            required=True,
-            type='list'
-        ),
-        volumes=dict(
-            required=True,
-            type='bool'
-        ),
-        mounts=dict(
-            required=True,
-            type='bool'
-        ),
-        debug=dict(
-            required=False,
-            default=False,
-            type='bool'
-        ),
-        owner=dict(
-            required=False
-        ),
-        group=dict(
-            required=False
-        ),
-        mode=dict(
-            required=False,
-            type="str"
-        ),
+        data=dict(required=True, type="list"),
+        volumes=dict(required=True, type="bool"),
+        mounts=dict(required=True, type="bool"),
+        debug=dict(required=False, default=False, type="bool"),
+        owner=dict(required=False),
+        group=dict(required=False),
+        mode=dict(required=False, type="str"),
     )
 
     module = AnsibleModule(
@@ -341,5 +464,5 @@ def main():
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
