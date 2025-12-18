@@ -1,4 +1,5 @@
 ---
+
 docker_container_prune:
   enable: true
   state: started
@@ -78,5 +79,11 @@ docker_client_config:
       "test.tld":
         username: "FOO-was-sonst"
         passwort: "ja-toll-schon-wieder-alles-scheisse!"
+
+docker_plugins:
+  - alias: loki
+    source: grafana/loki-docker-driver
+    version: 2.7.0
+    state: present
 
 ...

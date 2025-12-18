@@ -1,1 +1,3 @@
 hooks
+__pycache__
+*.save

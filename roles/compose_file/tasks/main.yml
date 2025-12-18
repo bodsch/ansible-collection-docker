@@ -48,10 +48,10 @@
 
 - name: "compose #2"
   bodsch.docker.compose_files:
-    base_directory: "/tmp/docker-compose.d"
+    base_directory: "/tmp/docker-compose-next.d"
     # version: 3
-    networks: "{{ compose_network }}"
-    services: "{{ compose_services }}"
-    volumes: "{{ compose_volumes }}"
+    networks: "{{ compose_network | default([]) }}"
+    services: "{{ compose_services | default([]) }}"
+    volumes: "{{ compose_volumes | default([]) }}"
 
 ...
