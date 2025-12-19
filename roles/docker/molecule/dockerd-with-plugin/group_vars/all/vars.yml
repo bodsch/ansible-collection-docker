@@ -35,6 +35,20 @@ docker_client_config:
       "test.tld":
         username: "FOO-was-sonst"
         password: "ja-toll-schon-wieder-alles-scheisse!"
+    formats:
+      ps:
+        - ".ID"
+        - ".Names"
+        - ".Status"
+        - ".Labels"
+        - ".RunningFor"
+        - ".Ports"
+      images:
+        - ".ID"
+        - ".Size"
+        - ".Repository"
+        - ".Tag"
+        - ".CreatedAt"
 
 docker_config:
   # data_root: /opt/docker

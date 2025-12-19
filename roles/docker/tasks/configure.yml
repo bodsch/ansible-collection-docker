@@ -4,7 +4,7 @@
   ansible.builtin.file:
     path: /etc/docker
     state: directory
-    mode: "0775"
+    mode: "0750"
     owner: root
     group: root
 

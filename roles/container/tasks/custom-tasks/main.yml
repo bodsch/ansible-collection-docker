@@ -26,13 +26,17 @@
       register: _pre_task_available
       loop: "{{ container_pre_tasks }}"
 
+    - name: define pre tasks
+      ansible.builtin.set_fact:
+        _pre_tasks: "{{ _pre_task_available.results | bodsch.docker.files_available }}"
+
     - name: assert missing pre task
       ansible.builtin.assert:
         that:
-          - _pre_task_available.results | bodsch.docker.files_available | count == container_pre_tasks | count
+          - _pre_tasks | count == container_pre_tasks | count
         msg:
           - not all pre tasks are available
-          - missing {{ container_pre_tasks | difference(_pre_task_available.results | bodsch.docker.files_available) }}
+          - missing {{ container_pre_tasks | difference(_pre_tasks) }}
         quiet: true
 
 - name: validate post tasks
@@ -51,13 +55,17 @@
       register: _post_task_available
       loop: "{{ container_post_tasks }}"
 
+    - name: define post tasks
+      ansible.builtin.set_fact:
+        _post_tasks: "{{ _post_task_available.results | bodsch.docker.files_available }}"
+
     - name: assert missing post task
       ansible.builtin.assert:
         that:
-          - _post_task_available.results | bodsch.docker.files_available | count == container_post_tasks | count
+          - _post_tasks | count == container_post_tasks | count
         msg:
           - not all pre tasks are available
-          - missing {{ container_post_tasks | difference(_post_task_available.results | bodsch.docker.files_available) }}
+          - missing {{ container_post_tasks | difference(_post_tasks) }}
         quiet: true
 
 ...

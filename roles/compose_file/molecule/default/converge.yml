@@ -9,4 +9,4 @@
     NETRC: ''
 
   roles:
-    - role: bodsch.docker.container
+    - role: bodsch.docker.compose_file
