@@ -84,8 +84,6 @@ If you want to use something stable, please use a [Tagged Version](https://githu
 
 ## Modules
 
-### ``
-
 | Name                      | Description |
 | :----                     | :----       |
 | `compose_file`            | Manage Docker Compose YAML files |

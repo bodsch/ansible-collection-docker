@@ -85,6 +85,8 @@ create single `compose.yml`
       vmail-index-vol-1:
 ```
 
+create multiple compose fragments
+
 #### `compose_network`
 
 ```yaml
@@ -137,8 +139,6 @@ compose_volumes:
   - name: vmail-vol-1
     state: present
 ```
-
-create multiple compose fragments
 
 ```yaml
 - name: "compose #2"
