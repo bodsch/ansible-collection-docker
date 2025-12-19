@@ -110,6 +110,12 @@ def test_directories(host, get_vars):
             'trust',
             'volumes']
 
+        if Version(docker_version) < Version("23.0.0"):
+            docker_directories.append('trust')
+
+        if Version(docker_version) > Version("29.0.0"):
+            docker_directories.remove('image')
+
         for directory in docker_directories:
             d = host.file(os.path.join(data_root, directory))
             assert d.is_directory
