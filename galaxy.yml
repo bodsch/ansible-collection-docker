@@ -3,7 +3,7 @@
 namespace: bodsch
 name: docker
 
-version: 1.4.0
+version: 1.5.0
 
 readme: README.md
 
@@ -23,8 +23,8 @@ tags:
   - container
 
 dependencies:
-  bodsch.core: ">=2.2.1"
-  bodsch.scm: ">=1.4.6"
+  bodsch.core: ">=2.8.1"
+  bodsch.scm: ">=1.7.0"
   community.docker: "*"
   community.general: ">=6.5.0"
 
