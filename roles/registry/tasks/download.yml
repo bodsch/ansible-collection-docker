@@ -12,7 +12,7 @@
         checksum_file: "registry_{{ registry_version }}_linux_{{ system_architecture }}.tar.gz.sha256"
         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        architecture: "{{ ansible_architecture }}"
+        architecture: "{{ ansible_facts.architecture }}"
         system: "{{ ansible_facts.system }}"
         version: "v{{ registry_version }}"
       register: _latest_checksum
@@ -32,7 +32,7 @@
     url: "{{ registry_release_download_url }}/download/v{{ registry_version }}/registry_{{ registry_version }}_{{ ansible_facts.system }}_{{ system_architecture }}.tar.gz"
     dest: "{{ registry_local_tmp_directory }}/registry-{{ system_architecture }}.tar.gz"
     checksum: "sha256:{{ __registry_checksum }}"
-    mode: 0660
+    mode: "0660"
   register: _download_archive
   until: _download_archive is succeeded
   retries: 5

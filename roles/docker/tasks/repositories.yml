@@ -1,40 +1,23 @@
 ---
 
-- name: debain based
+- name: add docker-ce apt sources
   when:
-    - ansible_os_family | lower == 'debian'
-  block:
-    - name: add docker apt key
-      ansible.builtin.get_url:
-        url: https://download.docker.com/linux/debian/gpg
-        dest: /usr/share/keyrings/docker-archive-keyring.asc
-        mode: '0644'
-      register: docker_apt_key
-      notify:
-        - dearmor docker apt key
-
-    - name: add docker apt repository
-      become: true
-      ansible.builtin.copy:
-        dest: /etc/apt/sources.list.d/docker.sources
-        content: |
-          Types: deb
-          URIs: https://download.docker.com/linux/{{ ansible_distribution | lower }}
-          Suites: {{ ansible_distribution_release }}
-          Architectures: amd64
-          Components: stable
-          Signed-By: /usr/share/keyrings/docker-archive-keyring.gpg
-        mode: '0644'
-      register: docker_apt_repository
-
-    - name: flush handlers at this point
-      ansible.builtin.meta: flush_handlers
-
-    - name: update package cache
-      ansible.builtin.package:
-        update_cache: true
-      when:
-        - docker_apt_key.changed or
-          docker_apt_repository.changed
+    - ansible_facts.os_family | lower == 'debian'
+  bodsch.core.apt_sources:
+    name: docker-cd
+    filename: docker-ce.sources
+    uris:
+      - https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}
+    suites: "{{ ansible_facts.distribution_release | lower }}"
+    components:
+      - stable
+    signed_by: /usr/share/keyrings/docker-archive-keyring.gpg
+    key:
+      method: download
+      url: "https://download.docker.com/linux/debian/gpg"
+      dest: "/usr/share/keyrings/docker-archive-keyring.gpg"
+      dearmor: true
+      validate: true
+    update_cache: true
 
 ...

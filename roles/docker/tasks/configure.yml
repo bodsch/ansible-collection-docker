@@ -28,7 +28,7 @@
 # configure proxy settings if enabled
 - name: configure systemd
   when:
-    - ansible_service_mgr == 'systemd'
+    - ansible_facts.service_mgr == 'systemd'
   block:
     - name: create dropin directory
       ansible.builtin.file:
@@ -87,7 +87,7 @@
   notify:
     - daemon reload
   when:
-    - ansible_service_mgr == 'openrc'
+    - ansible_facts.service_mgr == 'openrc'
 
 - name: flush handlers at this point to avoid double restart
   ansible.builtin.meta: flush_handlers

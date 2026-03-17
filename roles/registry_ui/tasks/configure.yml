@@ -22,7 +22,7 @@
     state: directory
     owner: root
     group: "{{ registry_ui_system_group }}"
-    mode: 0775
+    mode: "0775"
 
 - name: create config.yml
   ansible.builtin.template:
@@ -31,7 +31,7 @@
     force: true
     owner: root
     group: "{{ registry_ui_system_group }}"
-    mode: 0664
+    mode: "0664"
   notify:
     - validate config
     - restart registry-ui

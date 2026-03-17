@@ -28,7 +28,7 @@
 
 - name: define delegate instance for download handling
   ansible.builtin.set_fact:
-    registry_ui_delegate_to: "{{ ansible_host }}"
+    registry_ui_delegate_to: "{{ ansible_facts.host }}"
     registry_ui_local_tmp_directory: "{{
         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
         default('/var/cache/ansible/registry-ui', true) }}/{{ registry_ui_version }}"
@@ -42,7 +42,7 @@
   ansible.builtin.file:
     path: "{{ registry_ui_local_tmp_directory }}"
     state: directory
-    mode: 0750
+    mode: "0750"
 
 - name: detect the downloaded registry_ui archive
   become: false
@@ -69,7 +69,7 @@
             checksum_file: "{{ registry_ui_release.file }}.sha256"
             user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
             password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-            architecture: "{{ ansible_architecture }}"
+            architecture: "{{ ansible_facts.architecture }}"
             system: "{{ ansible_facts.system | lower }}"
             version: "{{ registry_ui_version }}"
           register: _latest_checksum
@@ -90,7 +90,7 @@
         url: "{{ registry_ui_release.download_url }}/download/{{ registry_ui_version }}/{{ registry_ui_release.file }}"
         dest: "{{ registry_ui_local_tmp_directory }}/"
         checksum: "{{ __registry_ui_checksum | default(omit) }}"
-        mode: 0640
+        mode: "0640"
       register: _download_archive
       until: _download_archive is succeeded
       retries: 5

@@ -23,8 +23,8 @@ tags:
   - container
 
 dependencies:
-  bodsch.core: ">=2.8.1"
-  bodsch.scm: ">=1.7.0"
+  bodsch.core: ">=2.11.0"
+  bodsch.scm: ">=1.8.0"
   community.docker: "*"
   community.general: ">=6.5.0"
 

@@ -5,7 +5,7 @@
     name: containerd
     state: started
   when:
-    - ansible_os_family | lower == 'archlinux'
+    - ansible_facts.os_family | lower == 'archlinux'
 
 - name: dearmor docker apt key
   become: true
@@ -36,7 +36,7 @@
     daemon_reload: true
     force: true
   when:
-    - ansible_service_mgr == 'systemd'
+    - ansible_facts.service_mgr == 'systemd'
 
 - name: information about config changes  # noqa no-handler
   ansible.builtin.debug:

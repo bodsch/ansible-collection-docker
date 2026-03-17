@@ -1,0 +1,31 @@
+---
+
+- name: create install directory
+  when:
+    - not running_in_check_mode
+  ansible.builtin.file:
+    path: "{{ compose_install_path }}"
+    state: directory
+    mode: "0755"
+
+- name: deploy and activate compose version {{ compose_version }}
+  when:
+    - not running_in_check_mode
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ compose_local_tmp_directory }}"
+    install_dir: "{{ compose_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('true' if compose_direct_download else 'false') | bool }}"
+    mode: "0755"
+    items:
+      - name: docker-compose
+
+- name: create custom fact file
+  when:
+    - not running_in_check_mode
+  bodsch.core.facts:
+    name: docker_compose
+    facts:
+      version: "{{ compose_version }}"
+
+...

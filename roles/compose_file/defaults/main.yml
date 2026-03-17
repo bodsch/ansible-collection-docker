@@ -1,9 +1,0 @@
----
-
-compose_network: []
-
-compose_services: []
-
-compose_volumes: []
-
-...

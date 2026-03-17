@@ -188,7 +188,7 @@ registry_defaults_http:
                                                             # This can be used to serve the registry under a specific path
                                                             # rather than at the root of the domain (e.g., "/registry").
 
-  secret: "{{ ansible_host | b64encode }}"                  # Secret specifies the secret key which HMAC tokens are created with.
+  secret: "{{ ansible_facts.host | b64encode }}"                  # Secret specifies the secret key which HMAC tokens are created with.
   relativeurls: true                                        # RelativeURLs specifies that relative URLs should be returned in Location headers
   ## draintimeout: 60s                                      # Amount of time to wait for connection to drain before shutting down when registry
                                                             # receives a stop signal
@@ -331,7 +331,7 @@ go_arch_map:
   armv7l: 'armv7'
   armv6l: 'armv6'
 
-system_architecture: "{{ go_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
 
 systemd_lib_directory: /lib/systemd/system
 

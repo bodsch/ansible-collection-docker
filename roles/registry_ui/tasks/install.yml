@@ -30,7 +30,7 @@
     state: directory
     owner: "{{ registry_ui_system_user }}"
     group: "{{ registry_ui_system_group }}"
-    mode: 0755
+    mode: "0755"
 
 - name: detect extracted binary file for registry on {{ registry_ui_delegate_to }}
   become: false
@@ -67,7 +67,7 @@
           ansible.builtin.copy:
             src: "{{ registry_ui_local_tmp_directory }}/registry-ui"
             dest: "{{ registry_ui_install_path }}/registry-ui"
-            mode: 0755
+            mode: "0755"
             owner: "{{ registry_ui_system_user }}"
             group: "{{ registry_ui_system_group }}"
             remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
@@ -76,7 +76,7 @@
           ansible.builtin.copy:
             src: "{{ registry_ui_local_tmp_directory }}/{{ item }}/"
             dest: "{{ registry_ui_data_dir }}/{{ item }}/"
-            mode: 0644
+            mode: "0644"
             owner: "{{ registry_ui_system_user }}"
             group: "{{ registry_ui_system_group }}"
             remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
@@ -108,7 +108,7 @@
 
 - name: systemd
   when:
-    - ansible_service_mgr | lower == "systemd"
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
     - name: create systemd run configuration
       ansible.builtin.template:
@@ -117,7 +117,7 @@
         force: true
         owner: root
         group: "{{ registry_ui_system_group }}"
-        mode: 0640
+        mode: "0640"
       notify:
         - restart registry-ui
 
@@ -127,13 +127,13 @@
         dest: "{{ systemd_lib_directory }}/registry-ui.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - daemon-reload
 
 - name: openrc
   when:
-    - ansible_service_mgr | lower == "openrc"
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -141,7 +141,7 @@
         dest: "/etc/conf.d/registry-ui"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: create openrc init file
       ansible.builtin.template:
@@ -149,7 +149,7 @@
         dest: "/etc/init.d/registry-ui"
         owner: root
         group: root
-        mode: 0750
+        mode: "0750"
 
 - name: create custom fact file
   bodsch.core.facts:

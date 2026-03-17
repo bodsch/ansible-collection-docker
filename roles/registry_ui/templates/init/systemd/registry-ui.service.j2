@@ -6,7 +6,7 @@ After            = network-online.target
 
 [Service]
 Type             = simple
-Environment      = GOMAXPROCS={{ ansible_processor_vcpus | default(ansible_processor_count) }}
+Environment      = GOMAXPROCS={{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}
 Environment      = HOME={{ registry_ui_data_dir }}
 EnvironmentFile  = {{ registry_ui_defaults_directory }}/registry-ui
 
