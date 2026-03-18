@@ -11,11 +11,8 @@ testinfra_hosts = infra_hosts(host_name="instance")
 # --- tests -----------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "dirs",
-    [
-        "/usr/local/opt/docker-compose",
-    ],
+@pytest.mark.parametrize("dirs",
+    ["/usr/local/opt/docker-compose",],
 )
 def test_directories(host, dirs):
 
@@ -23,13 +20,10 @@ def test_directories(host, dirs):
     assert d.is_directory
 
 
-@pytest.mark.parametrize(
-    "files",
-    [
-        "/usr/bin/docker-compose",
-    ],
+@pytest.mark.parametrize("files",
+    ["/usr/bin/docker-compose",],
 )
-def test_files(host, dirs):
+def test_files(host, files):
 
-    d = host.file(dirs)
+    d = host.file(files)
     assert d.is_file
