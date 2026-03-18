@@ -1,4 +1,3 @@
-
 from __future__ import annotations, unicode_literals
 
 import os
@@ -13,8 +12,7 @@ testinfra_hosts = infra_hosts(host_name="instance")
 
 
 def test_directories(host, get_vars):
-    """
-    """
+    """ """
     _facts = local_facts(host=host, fact="docker")
 
     docker_config = get_vars.get("docker_config")
@@ -26,21 +24,22 @@ def test_directories(host, get_vars):
         assert d.is_directory
 
         docker_directories = [
-            'buildkit',
-            'containers',
-            'image',
-            'network',
-            'plugins',
-            'runtimes',
-            'swarm',
-            'tmp',
-            'volumes']
+            "buildkit",
+            "containers",
+            "image",
+            "network",
+            "plugins",
+            "runtimes",
+            "swarm",
+            "tmp",
+            "volumes",
+        ]
 
         if Version(docker_version) < Version("23.0.0"):
-            docker_directories.append('trust')
+            docker_directories.append("trust")
 
         if Version(docker_version) > Version("29.0.0"):
-            docker_directories.remove('image')
+            docker_directories.remove("image")
 
         for directory in docker_directories:
             d = host.file(os.path.join(data_root, directory))
@@ -48,8 +47,7 @@ def test_directories(host, get_vars):
 
 
 def test_listening_socket(host, get_vars):
-    """
-    """
+    """ """
     distribution = host.system_info.distribution
     release = host.system_info.release
 
@@ -69,7 +67,11 @@ def test_listening_socket(host, get_vars):
         for socket in listeners:
             print(socket)
 
-            if distribution == "ubuntu" and release == "18.04" and socket.startswith("unix"):
+            if (
+                distribution == "ubuntu"
+                and release == "18.04"
+                and socket.startswith("unix")
+            ):
                 continue
 
             socket = host.socket(socket)

@@ -1,4 +1,3 @@
-
 from __future__ import annotations, unicode_literals
 
 import os
@@ -12,10 +11,8 @@ testinfra_hosts = infra_hosts(host_name="instance")
 # --- tests -----------------------------------------------------------------
 
 
-
 def test_packages(host):
-    """
-    """
+    """ """
     distribution = host.system_info.distribution
     release = host.system_info.release
 
@@ -26,7 +23,7 @@ def test_packages(host):
     packages.append("iptables")
 
     if not distribution == "artix":
-        if distribution == 'arch':
+        if distribution == "arch":
             packages.append("docker")
         else:
             packages.append("docker-ce")
@@ -36,9 +33,12 @@ def test_packages(host):
             assert p.is_installed
 
 
-@pytest.mark.parametrize("dirs", [
-    "/etc/docker",
-])
+@pytest.mark.parametrize(
+    "dirs",
+    [
+        "/etc/docker",
+    ],
+)
 def test_directories(host, dirs):
 
     d = host.file(dirs)
@@ -48,6 +48,6 @@ def test_directories(host, dirs):
 
 def test_service_running_and_enabled(host):
 
-    service = host.service('docker')
+    service = host.service("docker")
     assert service.is_running
     assert service.is_enabled

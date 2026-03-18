@@ -1,4 +1,3 @@
-
 from __future__ import annotations, unicode_literals
 
 import os
@@ -14,5 +13,5 @@ testinfra_hosts = infra_hosts(host_name="instance")
 
 def test_env_directory(host, get_vars):
     """ """
-    dir = host.file(get_vars.get('container_env_directory'))
+    dir = host.file(get_vars.get("container_env_directory"))
     assert dir.is_directory

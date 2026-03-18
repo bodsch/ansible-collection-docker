@@ -1,4 +1,3 @@
-
 from __future__ import annotations, unicode_literals
 
 import os
@@ -13,8 +12,7 @@ testinfra_hosts = infra_hosts(host_name="instance")
 
 
 def test_directories(host, get_vars):
-    """
-    """
+    """ """
     directories = []
     directories.append("/etc/registry-ui")
     directories.append("/var/lib/registry-ui")
@@ -25,8 +23,7 @@ def test_directories(host, get_vars):
 
 
 def test_files(host, get_vars):
-    """
-    """
+    """ """
     distribution = host.system_info.distribution
     release = host.system_info.release
 
@@ -36,13 +33,12 @@ def test_files(host, get_vars):
     _facts = local_facts(host=host, fact="registry_ui")
     version = _facts.get("version")
 
-
     install_dir = get_vars.get("registry_ui_install_path")
     defaults_dir = get_vars.get("registry_ui_defaults_directory")
     config_dir = get_vars.get("registry_ui_config_dir")
 
-    if 'latest' in install_dir:
-        install_dir = install_dir.replace('latest', version)
+    if "latest" in install_dir:
+        install_dir = install_dir.replace("latest", version)
 
     files = []
     files.append("/usr/bin/registry-ui")
@@ -63,8 +59,7 @@ def test_files(host, get_vars):
 
 
 def test_user(host, get_vars):
-    """
-    """
+    """ """
     user = get_vars.get("registry_ui_system_user", "registry")
     group = get_vars.get("registry_ui_system_group", "registry")
 
@@ -75,16 +70,14 @@ def test_user(host, get_vars):
 
 
 def test_service(host, get_vars):
-    """
-    """
+    """ """
     service = host.service("registry-ui")
     assert service.is_enabled
     assert service.is_running
 
 
 def test_open_port(host, get_vars):
-    """
-    """
+    """ """
     listen = get_vars.get("registry_ui_listen", None)
 
     if listen:

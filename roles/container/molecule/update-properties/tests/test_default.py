@@ -1,4 +1,3 @@
-
 from __future__ import annotations, unicode_literals
 
 import os
@@ -12,11 +11,9 @@ testinfra_hosts = infra_hosts(host_name="instance")
 # --- tests -----------------------------------------------------------------
 
 
-@pytest.mark.parametrize("files", [
-    "hello-world"
-])
+@pytest.mark.parametrize("files", ["hello-world"])
 def test_properties(host, get_vars, files):
-    dir = host.file(get_vars.get('container_env_directory'))
+    dir = host.file(get_vars.get("container_env_directory"))
 
     for file in [
         f"{dir.linked_to}/{files}/{files}.properties",
@@ -26,9 +23,8 @@ def test_properties(host, get_vars, files):
 
 
 def test_property_file(host, get_vars):
-    """
-    """
-    dir = host.file(get_vars.get('container_env_directory'))
+    """ """
+    dir = host.file(get_vars.get("container_env_directory"))
 
     repl_user_key = "replicator.user"
     repl_user_val = "replicator"
@@ -41,14 +37,14 @@ def test_property_file(host, get_vars):
 
 
 def test_property_changes(host, get_vars):
-    """
-    """
+    """ """
     import re
-    dir = host.file(get_vars.get('container_env_directory'))
+
+    dir = host.file(get_vars.get("container_env_directory"))
 
     property_file = host.file(f"{dir.linked_to}/hello-world/hello-world.properties")
     content = property_file.content_string.split("\n")
 
     re_recursion_depth = re.compile("publisher.maxRecursionDepth.*= 900")
 
-    assert (len(list(filter(re_recursion_depth.match, content))) > 0)
+    assert len(list(filter(re_recursion_depth.match, content))) > 0

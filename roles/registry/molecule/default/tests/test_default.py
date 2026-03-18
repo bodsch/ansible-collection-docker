@@ -1,4 +1,3 @@
-
 from __future__ import annotations, unicode_literals
 
 import os
@@ -13,9 +12,12 @@ testinfra_hosts = infra_hosts(host_name="instance")
 
 
 def test_directories(host, get_vars):
-    """
-    """
-    root_dir = get_vars.get("registry_storage", {}).get("filesystem", {}).get("rootdirectory", {})
+    """ """
+    root_dir = (
+        get_vars.get("registry_storage", {})
+        .get("filesystem", {})
+        .get("rootdirectory", {})
+    )
 
     directories = []
     directories.append(get_vars.get("registry_config_dir"))
@@ -29,8 +31,7 @@ def test_directories(host, get_vars):
 
 
 def test_files(host, get_vars):
-    """
-    """
+    """ """
     distribution = host.system_info.distribution
     release = host.system_info.release
 
@@ -45,8 +46,8 @@ def test_files(host, get_vars):
     defaults_dir = get_vars.get("registry_defaults_directory")
     config_dir = get_vars.get("registry_config_dir")
 
-    if 'latest' in install_dir:
-        install_dir = install_dir.replace('latest', version)
+    if "latest" in install_dir:
+        install_dir = install_dir.replace("latest", version)
 
     files = []
     files.append("/usr/bin/registry")
@@ -67,8 +68,7 @@ def test_files(host, get_vars):
 
 
 def test_user(host, get_vars):
-    """
-    """
+    """ """
     user = get_vars.get("registry_system_user", "registry")
     group = get_vars.get("registry_system_group", "registry")
 
@@ -85,8 +85,7 @@ def test_service(host, get_vars):
 
 
 def test_open_port(host, get_vars):
-    """
-    """
+    """ """
     listen_address = "127.0.0.1:5000"
 
     service = host.socket(f"tcp://{listen_address}")
