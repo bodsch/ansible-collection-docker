@@ -1,0 +1,23 @@
+---
+
+# https://github.com/docker/compose/releases/
+compose_version: 2.40.1 # 1.29.2
+
+compose_install: true
+
+compose_install_type: file # plugin | file
+
+compose_direct_download: false
+
+compose_scm:
+  use_tags: true
+  without_beta: false
+  version_filter:
+    - "test"
+    - "preview"
+    - "beta"
+    - "rc"
+
+compose_release: {}
+
+...

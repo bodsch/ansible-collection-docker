@@ -18,6 +18,7 @@ pip install ruamel.yaml
     - Debian 10
     - Debian 11
     - Debian 12
+    - Debian 13
     - Ubuntu 20.04
     - Ubuntu 22.04
     - Ubuntu 24.04
@@ -72,12 +73,14 @@ If you want to use something stable, please use a [Tagged Version](https://githu
 | [bodsch.docker.container](./roles/container/README.md)       | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/container.yml?branch=main)][container]       | Ansible role for deployment of generic container applications. |
 | [bodsch.docker.registry](./roles/registry/README.md)         | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/registry.yml?branch=main)][registry]         | Ansible role to install and configure container [registry](https://github.com/distribution/distribution). |
 | [bodsch.docker.registry_ui](./roles/registry_ui/README.md)   | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/registry-ui.yml?branch=main)][registry_ui]   | Ansible role for installing and configuring [registry-ui](https://github.com/Quiq/docker-registry-ui)  |
+| [bodsch.docker.compose](./roles/compose/README.md)           | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/compose.yml?branch=main)][compose]           | Ansible role to install docker compose. |
 | [bodsch.docker.compose_file](./roles/compose_file/README.md) | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-docker/compose_file.yml?branch=main)][compose_file] | Ansible role to manage docker compose file or fragments. |
 
 [docker]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/docker.yml
 [container]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/container.yml
 [registry]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry.yml
 [registry_ui]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/registry-ui.yml
+[compose]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/compose.yml
 [compose_file]: https://github.com/bodsch/ansible-collection-docker/actions/workflows/compose_file.yml
 
                                                                               

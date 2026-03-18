@@ -1,0 +1,23 @@
+---
+
+compose_install_path: /usr/local/opt/docker-compose/{{ compose_version }}
+
+compose_delegate_to: localhost
+
+compose_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/docker-compose', true) }}/{{ compose_version }}"
+
+compose_defaults_release:
+  github_url: https://github.com/docker/compose/releases
+  api_url: https://api.github.com/repos/docker/compose/releases
+  file: "docker-compose-{{ ansible_facts.system | lower }}-{{ ansible_facts.architecture }}"
+  binary: compose
+
+# go_arch_map:
+#   i386: '386'
+#   x86_64: 'amd64'
+#
+# system_architecture: "{{ go_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}"
+
+...

@@ -50,7 +50,7 @@ scrape_configs:
   - job_name: 'nodeexporter'
     scrape_interval: 15s
     static_configs:
-      - targets: ["{{ ansible_fqdn }}:9100"]
+      - targets: ["{{ ansible_facts.fqdn }}:9100"]
         labels:
           environment: monitoring
           zone: monitoring
@@ -62,7 +62,7 @@ scrape_configs:
   - job_name: cadvisor
     scrape_interval: 15s
     static_configs:
-      - targets: ["{{ ansible_fqdn }}:8081"]
+      - targets: ["{{ ansible_facts.fqdn }}:8081"]
         labels:
           environment: monitoring
           zone: monitoring
@@ -80,7 +80,7 @@ scrape_configs:
       - targets: [ "{{ item['name'] }}:8199" ]
         labels:
           environment: coremedia
-          hostname: {{ ansible_fqdn }}
+          hostname: {{ ansible_facts.fqdn }}
           collector_type: coremedia
 {% endif %}
 {% endfor %}

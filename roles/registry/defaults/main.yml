@@ -2,26 +2,45 @@
 
 registry_version: 3.0.0
 
-registry_release_download_url: https://github.com/distribution/distribution/releases
+# registry_release_download_url: https://github.com/distribution/distribution/releases
 
 registry_system_user: registry
 registry_system_group: registry
 registry_config_dir: /etc/distribution
 
+registry_release:
+  download_url: https://github.com/distribution/distribution/releases
+  file: "registry_{{ registry_version }}_linux_{{ system_architecture }}.tar.gz"
+  checksum_file: "registry_{{ registry_version }}_linux_{{ system_architecture }}.tar.gz.sha256"
+  binary: registry
+
 registry_direct_download: false
 
 registry_service: {}
+
 registry_log: {}
+
 registry_storage: {}
+
 registry_auth: {}
+
 registry_middleware: {}
+
 registry_reporting: {}
-registry_http: {}
+
+registry_http:
+  secret: HXzJyHum2lqi1CWcflehe3OyKCKLgLCKSbshS2yJhc
+
 registry_notifications: {}
+
 registry_redis: {}
+
 registry_health: {}
+
 registry_proxy: {}
+
 registry_compatibility: {}
+
 registry_validation: {}
 
 ...

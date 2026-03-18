@@ -27,7 +27,6 @@ Features:
 This module is part of the `bodsch.docker` Ansible collection.
 """
 
-
 from __future__ import absolute_import, division, print_function
 
 import base64

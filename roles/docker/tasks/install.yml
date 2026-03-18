@@ -7,8 +7,8 @@
       - docker-engine
     state: absent
   when:
-    - not (ansible_os_family | lower == 'archlinux' or
-           ansible_os_family | lower | replace(' ', '') == 'artixlinux')
+    - not (ansible_facts.os_family | lower == 'archlinux' or
+           ansible_facts.os_family | lower | replace(' ', '') == 'artixlinux')
 
 - name: install docker
   ansible.builtin.package:
@@ -33,8 +33,8 @@
     state: started
     enabled: "{{ docker_service.enable }}"
   when:
-    - ansible_os_family | lower == 'archlinux'
-    - ansible_service_mgr | lower == 'systemd'
+    - ansible_facts.os_family | lower == 'archlinux'
+    - ansible_facts.service_mgr | lower == 'systemd'
 
 - name: ensure {{ docker_service.name }} is running
   ansible.builtin.service:
@@ -53,7 +53,7 @@
     #     lines: 10
     #   register: journalctl_docker
     #   when:
-    #     - ansible_service_mgr == 'systemd'
+    #     - ansible_facts.service_mgr == 'systemd'
     #
     # - name:
     #   debug:

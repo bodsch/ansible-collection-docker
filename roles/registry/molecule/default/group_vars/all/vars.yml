@@ -1,3 +1,6 @@
 ---
 
+registry_http:
+  secret: HXzJyHum2lqi1CWcflehe3OyKCKLgLCKSbshS2yJhc
+
 ...

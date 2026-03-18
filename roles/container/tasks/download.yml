@@ -55,11 +55,11 @@
 #
 - name: set local fact for container
   ansible.builtin.set_fact:
-    local_container: "{{ ansible_local.update_container.update_needed }}"
+    local_container: "{{ ansible_facts.local.update_container.update_needed }}"
   when:
-    - ansible_local.update_container is defined
-    - ansible_local.update_container.update_needed is defined
-    - ansible_local.update_container.update_needed | length != 0
+    - ansible_facts.local.update_container is defined
+    - ansible_facts.local.update_container.update_needed is defined
+    - ansible_facts.local.update_container.update_needed | length != 0
   tags:
     - container_pull
 

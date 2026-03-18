@@ -24,100 +24,57 @@
       when:
         - registry_ui_system_user != "root"
 
-- name: create install directory
-  ansible.builtin.file:
-    path: "{{ registry_ui_install_path }}"
-    state: directory
+- name: deploy and activate registry-ui version {{ registry_ui_version }}
+  when:
+    - not running_in_check_mode
+  bodsch.core.deploy_and_activate:
+    src_dir: "{{ registry_ui_local_tmp_directory }}"
+    install_dir: "{{ registry_ui_install_path }}"
+    link_dir: "/usr/bin"
+    remote_src: "{{ ('true' if registry_ui_direct_download else 'false') | bool }}"
     owner: "{{ registry_ui_system_user }}"
     group: "{{ registry_ui_system_group }}"
-    mode: 0755
+    mode: "0755"
+    items:
+      - name: registry-ui
+  notify:
+    - restart registry-ui
+  register: __activate_bin
 
-- name: detect extracted binary file for registry on {{ registry_ui_delegate_to }}
-  become: false
-  delegate_to: "{{ registry_ui_delegate_to }}"
-  run_once: "{{ 'false' if registry_ui_direct_download else 'true' }}"
+- name: detect static template
   ansible.builtin.stat:
-    path: "{{ registry_ui_local_tmp_directory }}/registry-ui"
-  register: stat_file_binary
+    path: "{{ registry_ui_data_dir }}/templates/base.html"
+  register: stat_static_template
 
-- name: fail when extracted binary are missing
-  ansible.builtin.fail:
-    msg: "missing extracted binary on ansible controller"
+- name: propagate static files
   when:
-    - not stat_file_binary.stat.exists
-
-- name: detect installed registry_ui binary
-  ansible.builtin.stat:
-    path: "{{ registry_ui_install_path }}/{{ registry_ui_release.binary }}"
-  register: stat_registry_ui_binary
-
-- name: detect activated registry_ui binary
-  ansible.builtin.stat:
-    path: /usr/bin/{{ registry_ui_release.binary }}
-  register: stat_registry_ui_activated
-
-- name: install and activate registry_ui
-  when:
-    - (stat_registry_ui_binary.stat is defined and not stat_registry_ui_binary.stat.exists | default('false')) or
-      not stat_registry_ui_activated.stat | bodsch.core.linked_version(registry_ui_install_path, registry_ui_version)
-  block:
-    - name: propagate files
-      block:
-        - name: propagate registry binaries
-          ansible.builtin.copy:
-            src: "{{ registry_ui_local_tmp_directory }}/registry-ui"
-            dest: "{{ registry_ui_install_path }}/registry-ui"
-            mode: 0755
-            owner: "{{ registry_ui_system_user }}"
-            group: "{{ registry_ui_system_group }}"
-            remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
-
-        - name: propagate static files
-          ansible.builtin.copy:
-            src: "{{ registry_ui_local_tmp_directory }}/{{ item }}/"
-            dest: "{{ registry_ui_data_dir }}/{{ item }}/"
-            mode: 0644
-            owner: "{{ registry_ui_system_user }}"
-            group: "{{ registry_ui_system_group }}"
-            remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
-          loop:
-            - static
-            - templates
-          notify:
-            - restart registry-ui
-
-        - name: create link to binary
-          ansible.builtin.file:
-            src: "{{ registry_ui_install_path }}/{{ registry_ui_release.binary }}"
-            dest: "/usr/bin/{{ registry_ui_release.binary }}"
-            state: link
-            force: true
-            follow: false
-          notify:
-            - restart registry-ui
-
-      rescue:
-        - name: delete install directory
-          ansible.builtin.file:
-            path: "{{ registry_ui_install_path }}"
-            state: absent
-
-        - name: exit with fail
-          ansible.builtin.fail:
-            msg: A serious error occurred during the installation of the binary.
+    - stat_static_template.stat is defined and not stat_static_template.stat.exists | default('false') | bool or
+      __activate_bin.changed | bool
+  ansible.builtin.copy:
+    src: "{{ registry_ui_local_tmp_directory }}/{{ item }}/"
+    dest: "{{ registry_ui_data_dir }}/{{ item }}/"
+    mode: 0644
+    owner: "{{ registry_ui_system_user }}"
+    group: "{{ registry_ui_system_group }}"
+    remote_src: "{{ 'true' if registry_ui_direct_download else 'false' }}"
+  loop:
+    - static
+    - templates
+  notify:
+    - restart registry-ui
 
 - name: systemd
   when:
-    - ansible_service_mgr | lower == "systemd"
+    - ansible_facts.service_mgr | lower == "systemd"
   block:
-    - name: create systemd run configuration
+    - name: create registry-ui run configuration
       ansible.builtin.template:
         src: "registry-ui.j2"
         dest: "{{ registry_ui_defaults_directory }}/registry-ui"
         force: true
         owner: root
         group: "{{ registry_ui_system_group }}"
-        mode: 0640
+        mode: "0640"
       notify:
         - restart registry-ui
 
@@ -127,13 +84,13 @@
         dest: "{{ systemd_lib_directory }}/registry-ui.service"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
       notify:
         - daemon-reload
 
 - name: openrc
   when:
-    - ansible_service_mgr | lower == "openrc"
+    - ansible_facts.service_mgr | lower == "openrc"
   block:
     - name: create openrc service configuration
       ansible.builtin.template:
@@ -141,7 +98,7 @@
         dest: "/etc/conf.d/registry-ui"
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 
     - name: create openrc init file
       ansible.builtin.template:
@@ -149,7 +106,7 @@
         dest: "/etc/init.d/registry-ui"
         owner: root
         group: root
-        mode: 0750
+        mode: "0750"
 
 - name: create custom fact file
   bodsch.core.facts:
