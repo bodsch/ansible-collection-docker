@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: check out the codebase.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: 🐍 set up python
         uses: actions/setup-python@v6.2.0
@@ -126,7 +126,7 @@ jobs:
 
     steps:
       - name: check out the codebase.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: 🐍 set up python
         uses: actions/setup-python@v6.2.0
@@ -186,7 +186,7 @@ jobs:
 
     steps:
       - name: check out the codebase.
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
