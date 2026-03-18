@@ -20,20 +20,20 @@
         - default.yaml
       skip: true
 
-- name: define delegate instance for download handling
+- name: detect ansible check_mode
+  bodsch.core.check_mode:
+  register: _check_mode
+
+- name: define running_in_check_mode
   ansible.builtin.set_fact:
-    registry_ui_delegate_to: "{{ ansible_facts.host }}"
-    registry_ui_local_tmp_directory: "{{
-        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
-        default('/var/cache/ansible/registry', true) }}/{{ registry_ui_version }}"
-  when:
-    - registry_ui_direct_download
+    running_in_check_mode: '{{ _check_mode.check_mode }}'
 
 - name: install dependency
+  when:
+    - not running_in_check_mode
+    - registry_ui_requirements | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ registry_ui_requirements }}"
     state: present
-  when:
-    - registry_ui_requirements | default([]) | count > 0
 
 ...

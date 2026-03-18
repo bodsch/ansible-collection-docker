@@ -45,7 +45,7 @@ registry_validation: {}
 
 ### `registry_log`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#log)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#log)
 
 ```yaml
 registry_log:
@@ -58,7 +58,7 @@ registry_log:
 
 ### `registry_storage`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#storage)
 ```yaml
 registry_storage:
   filesystem:
@@ -73,28 +73,28 @@ registry_storage:
 
 ### `registry_auth`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#auth)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#auth)
 ```yaml
 registry_auth: {}
 ```
 
 ### `registry_middleware`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#middleware)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#middleware)
 ```yaml
 registry_middleware: {}
 ```
 
 ### `registry_reporting`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#reporting)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#reporting)
 ```yaml
 registry_reporting: {}
 ```
 
 ### `registry_http`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#http)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#http)
 ```yaml
 
 registry_http:
@@ -110,28 +110,28 @@ registry_http:
 
 ### `registry_notifications`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#notifications)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#notifications)
 ```yaml
 registry_notifications: {}
 ```
 
 ### `registry_redis`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#redis)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#redis)
 ```yaml
 registry_redis: {}
 ```
 
 ### `registry_health`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#health)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#health)
 ```yaml
 registry_health: {}
 ```
 
 ### `registry_proxy`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#proxy)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#proxy)
 
 ```yaml
 registry_proxy: {}
@@ -139,14 +139,14 @@ registry_proxy: {}
 
 ### `registry_compatibility`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#compatibility)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#compatibility)
 ```yaml
 registry_compatibility: {}
 ```
 
 ### `registry_validation`
 
-[upstream doku](https://github.com/distribution/distribution/blob/main/docs/configuration.md#validation)
+[upstream doku](https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#validation)
 ```yaml
 registry_validation: {}
 ```

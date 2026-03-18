@@ -1,52 +1,147 @@
 ---
 
-- name: checksum
-  become: false
+- name: get latest release
+  when:
+    - not running_in_check_mode
+    - registry_version == "latest"
   delegate_to: localhost
+  become: false
   run_once: true
   block:
-    - name: get checksum list
-      bodsch.scm.github_checksum:
+    - name: get latest release
+      delegate_to: localhost
+      become: false
+      run_once: true
+      bodsch.scm.github_latest:
         project: distribution
         repository: distribution
-        checksum_file: "registry_{{ registry_version }}_linux_{{ system_architecture }}.tar.gz.sha256"
         user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
         password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
-        architecture: "{{ ansible_facts.architecture }}"
-        system: "{{ ansible_facts.system }}"
-        version: "v{{ registry_version }}"
-      register: _latest_checksum
+      register: _latest_release
 
-    - name: define checksum for {{ go_arch }} architecture
+    - name: re-define registry_version
       ansible.builtin.set_fact:
-        __registry_checksum: "{{ _latest_checksum.checksum }}"
-      when:
-        - _latest_checksum.rc == 0
-        - _latest_checksum.checksum is defined
-        - _latest_checksum.checksum | string | length > 0
+        registry_version: "{{ _latest_release.latest_release }}"
 
-- name: download registry binary archive
+- name: define download information
+  when:
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    registry_release: "{{ registry_defaults_release | combine(registry_release, recursive=True) }}"
+
+- name: define delegate instance for download handling
+  when:
+    - not running_in_check_mode
+    - registry_direct_download
+  ansible.builtin.set_fact:
+    registry_delegate_to: "{{ ansible_facts.host }}"
+    registry_local_tmp_directory: "{{
+        lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+        default('/var/cache/ansible/registry', true) }}/{{ registry_version }}"
+
+- name: create download directory
+  when:
+    - not running_in_check_mode
   become: false
   delegate_to: "{{ registry_delegate_to }}"
-  ansible.builtin.get_url:
-    url: "{{ registry_release_download_url }}/download/v{{ registry_version }}/registry_{{ registry_version }}_{{ ansible_facts.system }}_{{ system_architecture }}.tar.gz"
-    dest: "{{ registry_local_tmp_directory }}/registry-{{ system_architecture }}.tar.gz"
-    checksum: "sha256:{{ __registry_checksum }}"
-    mode: "0660"
-  register: _download_archive
-  until: _download_archive is succeeded
-  retries: 5
-  delay: 2
+  run_once: "{{ 'false' if registry_direct_download else 'true' }}"
+  ansible.builtin.file:
+    path: "{{ registry_local_tmp_directory }}"
+    state: directory
+    mode: "0750"
   check_mode: false
 
+- name: detect the downloaded registry archive
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ registry_delegate_to }}"
+  run_once: "{{ 'false' if registry_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ registry_local_tmp_directory }}/{{ registry_release.file }}"
+  register: stat_registry_archive
+
+- name: download
+  when:
+    - not running_in_check_mode
+    - stat_registry_archive.stat is defined
+    - not stat_registry_archive.stat.exists | default('false')
+  block:
+    - name: checksum
+      become: false
+      delegate_to: localhost
+      run_once: true
+      block:
+        - name: get checksum list
+          bodsch.scm.github_checksum:
+            project: distribution
+            repository: distribution
+            checksum_file: "{{ registry_release.checksum_file }}"
+            user: "{{ lookup('env', 'GH_USER') | default(omit) }}"
+            password: "{{ lookup('env', 'GH_TOKEN') | default(omit) }}"
+            architecture: "{{ ansible_facts.architecture }}"
+            system: "{{ ansible_facts.system }}"
+            version: "v{{ registry_version }}"
+          register: _latest_checksum
+
+        - name: define checksum for {{ system_architecture }} architecture
+          ansible.builtin.set_fact:
+            __registry_checksum: "sha256:{{ _latest_checksum.checksum }}"
+          when:
+            - _latest_checksum is defined
+            - _latest_checksum.rc is defined
+            - _latest_checksum.rc == 0
+            - _latest_checksum.checksum is defined
+            - _latest_checksum.checksum | string | length > 0
+
+    - name: download registry binary archive
+      become: false
+      delegate_to: "{{ registry_delegate_to }}"
+      run_once: "{{ 'false' if registry_direct_download else 'true' }}"
+      ansible.builtin.get_url:
+        url: "{{ registry_release.download_url }}/download/v{{ registry_version }}/{{ registry_release.file }}"
+        dest: "{{ registry_local_tmp_directory }}/{{ registry_release.file }}"
+        checksum: "{{ __registry_checksum | default(omit) }}"
+        mode: "0640"
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+
+  rescue:
+    - name: delete download directory
+      become: false
+      delegate_to: "{{ registry_delegate_to }}"
+      run_once: "{{ 'false' if registry_direct_download else 'true' }}"
+      ansible.builtin.file:
+        path: "{{ registry_local_tmp_directory }}"
+        state: absent
+
+    - name: exit with fail
+      ansible.builtin.fail:
+        msg: A serious error occurred when downloading the archive.
+
+- name: detect extracted binary
+  when:
+    - not running_in_check_mode
+  become: false
+  delegate_to: "{{ registry_delegate_to }}"
+  run_once: "{{ 'false' if registry_direct_download else 'true' }}"
+  ansible.builtin.stat:
+    path: "{{ registry_local_tmp_directory }}/{{ registry_release.binary }}"
+  register: stat_registry_binary
+
 - name: extract registry archive
+  when:
+    - not running_in_check_mode
+    - stat_registry_binary.stat is defined
+    - not stat_registry_binary.stat.exists | default('false')
   become: false
   delegate_to: "{{ registry_delegate_to }}"
   run_once: "{{ 'false' if registry_direct_download else 'true' }}"
   ansible.builtin.unarchive:
-    src: "{{ registry_local_tmp_directory }}/registry-{{ system_architecture }}.tar.gz"
-    dest: "{{ registry_local_tmp_directory }}"
+    src: "{{ registry_local_tmp_directory }}/{{ registry_release.file }}"
+    dest: "{{ registry_local_tmp_directory }}/"
     copy: false
-  register: _extract_archive
 
 ...

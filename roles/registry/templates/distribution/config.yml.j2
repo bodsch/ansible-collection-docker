@@ -3,7 +3,7 @@
 # {{ ansible_managed }}
 version: 0.1
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#log #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#log #}
 {%- if registry_log is defined and
       registry_log | count > 0 %}
 log:
@@ -47,7 +47,7 @@ log:
 
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#storage #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#storage #}
 {%- if registry_storage is defined and registry_storage | count > 0 %}
 storage:
   {% if registry_storage.filesystem is defined and
@@ -96,7 +96,7 @@ storage:
   {% endif %}
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#auth #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#auth #}
 {%- if registry_auth is defined and
       registry_auth | count > 0 %}
 auth:
@@ -114,25 +114,25 @@ auth:
   {% endif %}
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#middleware #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#middleware #}
 {%- if registry_middleware is defined and registry_middleware | count > 0 %}
 middleware:
   {{ registry_middleware | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#reporting #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#reporting #}
 {%- if registry_reporting is defined and registry_reporting | count > 0 %}
 reporting:
   {{ registry_reporting | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#http #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#http #}
 {% if registry_http is defined and registry_http | count > 0 %}
 http:
   {{ registry_http | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif %}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#notifications #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#notifications #}
 {% if registry_notifications is defined %}
 notifications:
   {# registry_notifications | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) #}
@@ -196,7 +196,7 @@ notifications:
   {% endif %}
 {% endif %}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#redis #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#redis #}
 {%- if registry_redis is defined and registry_redis | count > 0 %}
   {% if registry_version is version_compare('3.0', '>=') %}
     {% set registry_redis = registry_redis | bodsch.docker.registry_migrate('redis', registry_version) %}
@@ -205,7 +205,7 @@ redis:
   {{ registry_redis | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif %}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#health #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#health #}
 {%- if registry_health is defined and registry_health | count > 0 %}
 health:
   {{ registry_health | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
@@ -216,21 +216,21 @@ health:
 #   maxentries: 1000
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#proxy #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#proxy #}
 {%- if registry_proxy is defined and
       registry_proxy | count > 0 %}
 proxy:
   {{ registry_proxy | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#compatibility #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#compatibility #}
 {%- if registry_compatibility is defined and
       registry_compatibility | count > 0 %}
 compatibility:
   {{ registry_compatibility | to_nice_yaml(indent=2,sort_keys=False) | indent(2, False) }}
 {% endif -%}
 
-{# https://github.com/distribution/distribution/blob/main/docs/configuration.md#validation #}
+{# https://github.com/distribution/distribution/blob/v2.8.3/docs/configuration.md#validation #}
 {%- if registry_validation is defined and
       registry_validation | count > 0 %}
 validation:
