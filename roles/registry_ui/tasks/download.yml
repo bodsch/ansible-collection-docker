@@ -1,14 +1,5 @@
 ---
 
-# - name: define delegate instance for download handling
-#   ansible.builtin.set_fact:
-#     registry_ui_delegate_to: "{{ ansible_facts.host }}"
-#     registry_ui_local_tmp_directory: "{{
-#         lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
-#         default('/var/cache/ansible/registry', true) }}/{{ registry_ui_version }}"
-#   when:
-#     - registry_ui_direct_download
-
 - name: get latest release
   delegate_to: localhost
   become: false
