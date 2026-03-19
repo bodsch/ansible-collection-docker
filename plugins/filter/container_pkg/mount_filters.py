@@ -20,69 +20,81 @@ class MountFilters(ContainerBase):
         display.vv("MountFilters::filters()")
 
         return {
-            "container_volumes": self.container_volumes,
-            "container_mounts": self.container_mounts,
+            # "container_volumes": self.container_volumes,
+            # "container_mounts": self.container_mounts,
             "validate_mountpoints": self.validate_mountpoints,
         }
 
-    def container_volumes(self, data: List[Dict[str, Any]]) -> List[Dict[str, str]]:
-        """
-        Extract and normalize volume definitions from container data.
+    # def container_volumes(self, data: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+    #     """
+    #     Extract and normalize volume definitions from container data.
+    #
+    #     Returns:
+    #         list: A list of dictionaries containing volume mappings and metadata.
+    #     """
+    #     display.vv("MountFilters::container_volumes(data)")
+    #
+    #     result: List[Dict[str, str]] = []
+    #
+    #     for container in data:
+    #         volumes = container.get("volumes", [])
+    #         if not isinstance(volumes, list):
+    #             continue
+    #
+    #         for volume_entry in volumes:
+    #             if not isinstance(volume_entry, str):
+    #                 continue
+    #
+    #             values = volume_entry.split(":")
+    #             if len(values) >= 2:
+    #                 result.append({"local": values[0], "remote": values[1]})
+    #
+    #     return result
 
-        Returns:
-            list: A list of dictionaries containing volume mappings and metadata.
-        """
-        display.vv("MountFilters::container_volumes(data)")
-
-        result: List[Dict[str, str]] = []
-
-        for container in data:
-            volumes = container.get("volumes", [])
-            if not isinstance(volumes, list):
-                continue
-
-            for volume_entry in volumes:
-                if not isinstance(volume_entry, str):
-                    continue
-
-                values = volume_entry.split(":")
-                if len(values) >= 2:
-                    result.append({"local": values[0], "remote": values[1]})
-
-        return result
-
-    def container_mounts(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Return valid mount definitions from container data.
-
-        Returns:
-            list: A list of mount dictionaries with 'source_handling.create' = True.
-        """
-        display.vv("MountFilters::container_mounts(data)")
-
-        result: List[Dict[str, Any]] = []
-
-        # Defensive: ensure _get_keys_from_dict exists
-        if not hasattr(self, "_get_keys_from_dict"):
-            raise AttributeError(
-                "Missing method _get_keys_from_dict required by container_mounts"
-            )
-
-        mounts = self._get_keys_from_dict(data, "mounts")
-        merged = self._flatten_list(mounts)
-        # merged = list(itertools.chain.from_iterable(mounts))
-
-        for item in merged:
-            if not isinstance(item, dict):
-                continue
-
-            source_handling = item.get("source_handling", {})
-            if isinstance(source_handling, dict) and source_handling.get(
-                "create", False
-            ):
-                result.append(item)
-
-        return result
+    # def container_mounts(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    #     """
+    #     Return valid mount definitions from container data.
+    #
+    #     Returns:
+    #         list: A list of mount dictionaries with 'source_handling.create' = True.
+    #     """
+    #     display.vv(",----------------------------")
+    #     display.vv("MountFilters::container_mounts(data)")
+    #
+    #     result: List[Dict[str, Any]] = []
+    #
+    #     # # Defensive: ensure _get_keys_from_dict exists
+    #     # if not hasattr(self, "_get_keys_from_dict"):
+    #     #     raise AttributeError(
+    #     #         "Missing method _get_keys_from_dict required by container_mounts"
+    #     #     )
+    #
+    #     mounts = self._get_keys_from_dict(data, "mounts")
+    #
+    #     display.vv(f"-> mounts: {mounts}")
+    #
+    #     merged = self._flatten_list(mounts)
+    #
+    #     display.vv(f"-> merged: {merged}")
+    #
+    #     # merged = list(itertools.chain.from_iterable(mounts))
+    #
+    #     for item in merged:
+    #         if not isinstance(item, dict):
+    #             continue
+    #
+    #         display.vv(f"- {item}")
+    #
+    #         source_handling = item.get("source_handling", {})
+    #
+    #         if isinstance(source_handling, dict) and source_handling.get(
+    #             "create", False
+    #         ):
+    #             result.append(item)
+    #
+    #     display.vv(f"= result: {result}")
+    #     display.vv("`----------------------------")
+    #     return result
 
     def validate_mountpoints(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -94,6 +106,7 @@ class MountFilters(ContainerBase):
         Returns:
             list: A list of invalid mount definitions with corresponding error messages.
         """
+        display.vv(",----------------------------")
         display.vv("MountFilters::validate_mountpoints(data)")
 
         errors: List[Dict[str, Any]] = []
@@ -121,4 +134,6 @@ class MountFilters(ContainerBase):
                         }
                     )
 
+        display.vv(f"= errors: {errors}")
+        display.vv("`----------------------------")
         return errors

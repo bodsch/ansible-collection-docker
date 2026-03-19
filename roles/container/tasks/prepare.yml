@@ -48,6 +48,8 @@
       ansible.builtin.setup:
 
 - name: install dependency
+  when:
+    - container_packages | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ container_packages }}"
     state: present
@@ -67,12 +69,15 @@
     container_reg: "{{ container_registry | bodsch.docker.combine_registries(container_registry_default) }}"
 
 - name: organise some information about the containers
-  ansible.builtin.set_fact:
-    container_information: "{{ container | bodsch.docker.container_filter(['present', 'only_present']) }}"
   when:
     - container | default([]) | count > 0
+  ansible.builtin.set_fact:
+    container_information: "{{ container | bodsch.docker.container_filter(['present', 'only_present']) }}"
+  no_log: true
 
 - name: define important facts about containers
+  when:
+    - container_information | default({}) | count > 0
   ansible.builtin.set_fact:
     container_names: "{{ container_information.names }}"
     container_to_launch: "{{ container_information.launch }}"
@@ -80,8 +85,7 @@
     container_volumes: "{{ container_information.volumes }}"
     container_environnments: "{{ container_information.environnments }}"
     container_images_needed: "{{ container_information.images }}"
-  when:
-    - container_information | default({}) | count > 0
+  no_log: true
 
 - name: validate container mountpoints
   when:

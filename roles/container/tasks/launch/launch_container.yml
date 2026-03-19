@@ -5,7 +5,7 @@
     name: "{{ item.name }}"
     hostname: "{{ item.hostname | default(item.name) }}"
     image: "{{ item.image }}"
-    auto_remove: "{{ item.auto_remove | default(omit) | bool }}"
+    auto_remove: "{{ item.auto_remove | default(omit) }}"
     blkio_weight: "{{ item.blkio_weight | default(omit) }}"
     cap_drop: "{{ item.cap_drop | default(omit) }}"
     capabilities: "{{ item.capabilities | default(omit) }}"
@@ -38,7 +38,7 @@
     env_file: "{{ container_env_directory }}/{{ item.name }}/container.env"
     etc_hosts: "{{ item.etc_hosts | default(omit) }}"
     exposed_ports: "{{ item.exposed_ports | default(omit) }}"
-    force_kill: "{{ item.force_kill | default(omit) }}"
+    force_kill: "{{ item.force_kill | default('false') | bool }}"
     groups: "{{ item.groups | default(omit) }}"
     healthcheck: "{{ item.healthcheck | default(omit) }}"
     kernel_memory: "{{ item.kernel_memory | default(omit) }}"
@@ -53,16 +53,16 @@
     mounts: "{{ item.mounts | default([]) | bodsch.docker.remove_source_handling }}"
     network_mode: "{{ item.network_mode | default('bridge') }}"
     networks: "{{ item.networks | default(omit) }}"
-    networks_cli_compatible: "{{ item.networks_cli_compatible | default(omit) }}"
+    networks_cli_compatible: "{{ item.networks_cli_compatible | default('true') | bool }}"
     oom_killer: "{{ item.oom_killer | default(omit) }}"
     oom_score_adj: "{{ item.oom_score_adj | default(omit) }}"
-    output_logs: "{{ item.output_logs | default(omit) }}"  # Only effective when log_driver is set to json-file, journald, or local.
+    output_logs: "{{ item.output_logs | default('false') | bool }}"  # Only effective when log_driver is set to json-file, journald, or local.
     privileged: "{{ item.privileged | default(omit) }}"
     publish_all_ports: "{{ item.publish_all_ports | default(omit) }}"
     published_ports: "{{ item.published_ports | default(omit) }}"
     read_only: "{{ item.read_only | default(omit) }}"
-    recreate: "{{ item.recreate | default(omit) }}"  # <==  RESTARTS container after EVERY ansible run
-    restart: "{{ item.restart | default(omit) }}"
+    recreate: "{{ item.recreate | default('false') | bool }}"  # <==  RESTARTS container after EVERY ansible run
+    restart: "{{ item.restart | default('false') | bool }}"
     restart_policy: "{{ item.restart_policy | default('on-failure') }}"
     restart_retries: "{{ item.restart_retries | default(omit) }}"
     security_opts: "{{ item.security_opts | default(omit) }}"
@@ -79,6 +79,7 @@
     working_dir: "{{ item.working_dir | default(omit) }}"
   register: create_container_instances
   ignore_errors: true
+  no_log: true
   loop: "{{ container_to_launch }}"
   loop_control:
     label: "{{ item.name.ljust(12) }} - hostname: {{ item.name }} - image: {{ item.image }}"
@@ -101,13 +102,13 @@
     msg: "{{ failed }}"
   when:
     - container_reporting.failed
-    - not container_fail.error_at_launch | default('true')
+    - not container_fail.error_at_launch | default('true') | bool
 
 - name: Exit if the start of a container has failed
   ansible.builtin.fail:
     msg: "{{ failed }}"
   when:
     - failed | default([]) | count > 0
-    - container_fail.error_at_launch | default('true')
+    - container_fail.error_at_launch | default('true') | bool
 
 ...

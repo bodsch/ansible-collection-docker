@@ -196,6 +196,7 @@ class ContainerMounts(object):
     def __init__(self, module):
         """ """
         self.module = module
+        self.module.log("ContainerMounts::__init__()")
 
         self.data = module.params.get("data")
         self.volumes = module.params.get("volumes")
@@ -222,6 +223,8 @@ class ContainerMounts(object):
 
     def run(self):
         """ """
+        self.module.log("ContainerMounts::run()")
+
         result = dict(changed=False, failed=True, msg="initial")
 
         all_mounts = []
@@ -230,12 +233,21 @@ class ContainerMounts(object):
 
         if self.volumes:
             all_volumes = self.__volumes()
+
+            self.module.log(f"  - all_volumes: {all_volumes}")
+
             migrated_volumes = self.__migrate_volumes_to_mounts(all_volumes)
+
+            self.module.log(f"  - migrated volumes: {migrated_volumes}")
 
         if self.mounts:
             all_mounts = self.__mounts()
 
+            self.module.log(f"  - all_mounts: {all_mounts}")
+
         full_list = migrated_volumes + all_mounts
+
+        self.module.log(f"  - full_list: {full_list} : len {len(full_list)}")
 
         if len(full_list) == 0:
             return dict(changed=False, failed=False, msg="nothing to do")
@@ -244,11 +256,14 @@ class ContainerMounts(object):
         create_directory_tree(full_list, current_state)
         final_state = self.__analyse_directories(full_list)
 
+        self.module.log(f"  - current_state: {current_state}")
+        self.module.log(f"  - final_state  : {final_state}")
+
         changed, diff, error_msg = compare_two_lists(
             list1=current_state, list2=final_state
         )
 
-        # self.module.log(f"   changed: {changed}, diff: {diff}")
+        self.module.log(f"   changed: {changed}, diff: {diff}")
 
         # TODO
         # remove custom fields from 'volumes'

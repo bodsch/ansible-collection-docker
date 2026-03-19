@@ -43,11 +43,22 @@ class ContainerBase:
         display.vv(f"ContainerBase::_get_keys_from_dict({dictionary}, {key})")
 
         result: List[Any] = []
+
         for item in dictionary:
+
+            display.vv(f"  - item: {item}")
+
             if isinstance(item, dict):
                 value = item.get(key)
+
+                display.vv(f"    - value: {value}")
+
                 if value is not None:
                     result.append(value)
+
+        display.vv(f"= result: {result}")
+        display.vv("----------------------------")
+
         return result
 
     def _del_keys_from_dict(

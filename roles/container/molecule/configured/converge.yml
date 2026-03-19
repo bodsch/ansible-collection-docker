@@ -8,5 +8,28 @@
   environment:
     NETRC: ''
 
+  pre_tasks:
+    - name: arch- / artixlinux
+      when:
+        - container_env_directory | default('') | length > 0
+      block:
+
+        - name: create base directory to persist docker environnments
+          become: true
+          ansible.builtin.file:
+            name: "{{ container_env_directory }}/registry"
+            state: directory
+            mode: "0755"
+
+        - name: create depends service
+          ansible.builtin.copy:
+            mode: "0440"
+            dest: "{{ container_env_directory }}/registry/config.yml"
+            content: |
+              ---
+              # molecule test yml
+
   roles:
     - role: bodsch.docker.container
+
+    #/opt/container/registry/config.yml
