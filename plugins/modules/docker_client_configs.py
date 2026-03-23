@@ -51,8 +51,8 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 ---
 module: docker_client_configs
-version_added: "1.0.0"
 author: "Bodo Schulz (@bodsch) <bodo@boone-schulz.de>"
+version_added: "1.0.0"
 
 short_description: Manage Docker client configuration files.
 description:
