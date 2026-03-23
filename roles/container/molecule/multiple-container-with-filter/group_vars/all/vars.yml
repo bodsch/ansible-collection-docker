@@ -39,10 +39,10 @@ _container_defaults: &CONTAINER_DEFAULTS
 
 container: "{{
   container_1 |
-  union(container_2 | default([])) |
-  union(container_3 | default([])) |
-  union(container_4 | default([])) |
-  union(container_5 | default([])) }}"
+  ansible.builtin.union(container_2) |
+  union(container_3) |
+  union(container_4) |
+  union(container_5) }}"
 
 container_1:
   - name: busybox-1

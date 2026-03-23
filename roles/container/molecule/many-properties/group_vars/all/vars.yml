@@ -21,10 +21,10 @@ _images:
 
 container: "{{
   container_1 |
-  union(container_2 | default([])) |
-  union(container_3 | default([])) |
-  union(container_4 | default([])) |
-  union(container_5 | default([])) }}"
+  union(container_2) |
+  union(container_3) |
+  union(container_4) |
+  union(container_5) }}"
 
 container_1:
   - name: busybox-1
@@ -47,6 +47,8 @@ container_1:
       DBA_HOST: database
       DBA_USER: username
 
+container_2: []
+
 container_3:
   - name: hello-world-1
     <<: *CONTAINER_DEFAULTS
@@ -59,4 +61,6 @@ container_3:
     environments:
       VIRTUAL_HOST: hello-world-1.local
 
+container_4: []
+container_5: []
 ...

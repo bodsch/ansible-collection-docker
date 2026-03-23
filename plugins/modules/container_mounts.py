@@ -7,10 +7,13 @@
 
 from __future__ import absolute_import, division, print_function
 
+import grp
+import os
+import pwd
+
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.directory import (
-    create_directory_tree,
-    current_state,
+    create_directory_tree
 )
 from ansible_collections.bodsch.core.plugins.module_utils.lists import compare_two_lists
 from ruamel.yaml import YAML
@@ -234,7 +237,7 @@ class ContainerMounts(object):
         if self.volumes:
             all_volumes = self.__volumes()
 
-            self.module.log(f"  - all_volumes: {all_volumes}")
+            # self.module.log(f"  - all_volumes: {all_volumes}")
 
             migrated_volumes = self.__migrate_volumes_to_mounts(all_volumes)
 
@@ -243,11 +246,11 @@ class ContainerMounts(object):
         if self.mounts:
             all_mounts = self.__mounts()
 
-            self.module.log(f"  - all_mounts: {all_mounts}")
+            # self.module.log(f"  - all_mounts: {all_mounts}")
 
         full_list = migrated_volumes + all_mounts
 
-        self.module.log(f"  - full_list: {full_list} : len {len(full_list)}")
+        # self.module.log(f"  - full_list: {full_list} : len {len(full_list)}")
 
         if len(full_list) == 0:
             return dict(changed=False, failed=False, msg="nothing to do")
@@ -272,6 +275,7 @@ class ContainerMounts(object):
             msg = ""
             for i in diff:
                 msg += f"- {i}\n"
+
             result["created_directories"] = msg
         else:
             result["msg"] = "nothing to do"
@@ -407,7 +411,7 @@ class ContainerMounts(object):
                 if not valid:
                     """ """
                     res = dict(
-                        source=local_volume,  # values[0],
+                        source=local_volume,   # values[0],
                         target=remote_volume,  # values[1],
                         type="bind",
                         source_handling=c_fields,
@@ -427,19 +431,32 @@ class ContainerMounts(object):
         result = []
         for entry in directory_tree:
             """ """
+            self.module.log(f"  - entry: {entry}")
+
             res = {}
 
             source = entry.get("source")
+            source_handling = entry.get("source_handling", {})
+            to_create = source_handling.get("create", True)
+
+            self.module.log(f"    source: {source}")
+            self.module.log(f"    create: {to_create}")
+
             current_owner = None
             current_group = None
             current_mode = None
-
             res[source] = {}
 
-            current_owner, current_group, current_mode = current_state(source)
+            exists, current_owner, current_group, current_mode = self.current_state(source)
+
+            self.module.log(f"    exists: {exists}")
+            self.module.log(f"    owner : {current_owner}")
+            self.module.log(f"    group : {current_group}")
+            self.module.log(f"    mode  : {current_mode}")
 
             res[source].update(
                 {
+                    "exists": exists,
                     "owner": current_owner,
                     "group": current_group,
                     "mode": current_mode,
@@ -450,6 +467,33 @@ class ContainerMounts(object):
 
         return result
 
+    def current_state(self, directory):
+        """ """
+        exists = False
+        current_owner = None
+        current_group = None
+        current_mode = None
+
+        if os.path.isdir(directory):
+            exists = True
+            _state = os.stat(directory)
+
+            try:
+                current_owner = pwd.getpwuid(_state.st_uid).pw_uid
+            except KeyError:
+                pass
+
+            try:
+                current_group = grp.getgrgid(_state.st_gid).gr_gid
+            except KeyError:
+                pass
+
+            try:
+                current_mode = oct(_state.st_mode)[-4:]
+            except KeyError:
+                pass
+
+        return exists, current_owner, current_group, current_mode
 
 # ===========================================
 # Module execution.

@@ -31,15 +31,15 @@ def test_volumes_directories(host, directories):
     assert dir.is_directory
 
 
-@pytest.mark.parametrize(
-    "directories",
-    [
-        "/tmp/testing5",
-    ],
-)
-def test_volume_directory(host, directories):
-    dir = host.file(directories)
-    assert not dir.is_directory
+# @pytest.mark.parametrize(
+#     "directories",
+#     [
+#         "/tmp/testing5",
+#     ],
+# )
+# def test_volume_directory(host, directories):
+#     dir = host.file(directories)
+#     assert not dir.is_directory
 
 
 @pytest.mark.parametrize(

@@ -43,7 +43,6 @@ def test_directories(host, dirs):
 
     d = host.file(dirs)
     assert d.is_directory
-    assert d.exists
 
 
 def test_service_running_and_enabled(host):

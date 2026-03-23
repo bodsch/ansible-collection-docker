@@ -42,16 +42,16 @@ _container_defaults: &CONTAINER_DEFAULTS
 
 container: "{{
   container_1 |
-  union(container_2 | default([])) |
-  union(container_3 | default([])) |
-  union(container_4 | default([])) |
-  union(container_5 | default([])) |
-  union(container_6 | default([])) |
-  union(container_7 | default([])) |
-  union(container_8 | default([])) |
-  union(container_9 | default([])) |
-  union(container_10 | default([])) |
-  union(container_11 | default([]))
+  union(container_2) |
+  union(container_3) |
+  union(container_4) |
+  union(container_5) |
+  union(container_6) |
+  union(container_7) |
+  union(container_8) |
+  union(container_9) |
+  union(container_10) |
+  union(container_11)
   }}"
 
 container_1:

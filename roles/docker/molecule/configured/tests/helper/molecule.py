@@ -179,6 +179,77 @@ def _load_vars_file(loader: DataLoader, file_base: Path) -> Dict[str, Any]:
     return {}
 
 
+def _load_ansible_filters_PLD() -> Dict[str, Any]:
+    """
+    Load Ansible built-in Jinja2 filters without instantiating the full Templar.
+
+    Iterates over ansible.plugins.filter submodules, calls FilterModule().filters()
+    on each, and returns a flat dict of {filter_name: callable}.
+
+    Only filter modules that expose a `FilterModule` class with a `.filters()` method
+    are loaded. Import failures are silently skipped (e.g., filters with C extensions
+    not available in the test environment).
+
+    Returns:
+        Dict mapping filter name to callable, ready for NativeEnvironment.filters.update().
+    """
+    import importlib
+    import pkgutil
+
+    import ansible.plugins.filter as _ansible_filter_pkg
+
+    filters: Dict[str, Any] = {}
+
+    for finder, module_name, _ in pkgutil.iter_modules(_ansible_filter_pkg.__path__):
+        fqn = f"ansible.plugins.filter.{module_name}"
+        try:
+            mod = importlib.import_module(fqn)
+            filter_class = getattr(mod, "FilterModule", None)
+            if filter_class is None:
+                continue
+            loaded = filter_class().filters()
+            if isinstance(loaded, dict):
+                filters.update(loaded)
+        except Exception as e:  # noqa: BLE001
+            # Skip filters with missing deps (e.g. ipaddr needs netaddr)
+            print(f"ERROR: {e}")
+            pass
+
+    return filters
+
+
+def _load_ansible_filters() -> Dict[str, Any]:
+    """
+    Load Ansible built-in Jinja2 filters and register them under both their short name
+    and their FQCN alias (ansible.builtin.<name>), matching Ansible's templar behavior.
+    """
+    import importlib
+    import pkgutil
+
+    import ansible.plugins.filter as _ansible_filter_pkg
+
+    filters: Dict[str, Any] = {}
+
+    for _, module_name, _ in pkgutil.iter_modules(_ansible_filter_pkg.__path__):
+        fqn = f"ansible.plugins.filter.{module_name}"
+        try:
+            mod = importlib.import_module(fqn)
+            filter_class = getattr(mod, "FilterModule", None)
+            if filter_class is None:
+                continue
+            loaded = filter_class().filters()
+            if not isinstance(loaded, dict):
+                continue
+            filters.update(loaded)
+            # Register FQCN aliases: ansible.builtin.<filter_name>
+            for name, func in loaded.items():
+                filters[f"ansible.builtin.{name}"] = func
+        except Exception:  # noqa: BLE001
+            pass
+
+    return filters
+
+
 @dataclass(frozen=True, slots=True)
 class VarsRenderConfig:
     """
@@ -239,19 +310,19 @@ class VarsRenderer:
 
     def make_env(self) -> NativeEnvironment:
         """
-        Build the Jinja2 environment.
+        Build the Jinja2 environment with Ansible built-in filters registered.
 
-        Uses NativeEnvironment so pure expressions yield native Python types where possible.
-        Uses ChainableUndefined to mimic Ansible's permissive undefined handling.
+        Loads filter plugins directly from ansible.plugins.filter (no Templar/VariableManager).
+        Falls back gracefully if a filter module cannot be imported.
         """
         env = NativeEnvironment(undefined=ChainableUndefined, autoescape=False)
 
+        # --- lookup / query globals (unchanged) ---
         def _lookup(plugin: str, term: Any, *rest: Any, **kwargs: Any) -> Any:
             if plugin != "env":
                 raise ValueError(
                     f"lookup('{plugin}', ...) not supported in tests (allowlist: env)"
                 )
-            # Behave similar to Ansible: unset env -> '' (so default(..., true) works)
             if isinstance(term, (list, tuple)):
                 vals = [os.environ.get(str(t), "") for t in term]
                 return vals[0] if kwargs.get("wantlist") is False else vals
@@ -264,6 +335,10 @@ class VarsRenderer:
 
         env.globals["lookup"] = _lookup
         env.globals["query"] = _query
+
+        # --- Register Ansible filter plugins ---
+        env.filters.update(_load_ansible_filters())
+
         return env
 
     def strip_unsafe(self, obj: Any) -> Any:
