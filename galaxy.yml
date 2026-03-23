@@ -34,7 +34,12 @@ homepage: https://github.com/bodsch/ansible-collection-docker
 issues: https://github.com/bodsch/ansible-collection-docker/issues
 
 build_ignore:
-  - "galaxy.yml"
+  - galaxy.yml
+  - ".config"
+  - ".git"
+  - hooks
+  - Makefile
+  - "*/molecule"
   - "*.pyc"
   - "*.retry"
   - ".ansible-lint"
@@ -43,3 +48,5 @@ build_ignore:
   - ".gitignore"
   - ".yamllint"
   - ".github"
+  - "tests"
+  - "plugins/filter/container_pkg"
