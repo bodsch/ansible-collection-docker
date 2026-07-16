@@ -1,0 +1,6 @@
+---
+
+roles:
+  - name: bodsch.users
+    # src: https://gitlab.com/bodsch/ansible-users.git
+    # scm: git
