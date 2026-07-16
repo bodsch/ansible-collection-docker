@@ -1,6 +1,7 @@
 ---
 
 - name: ensure {{ docker_service.name }} is running
+  become: true
   ansible.builtin.service:
     name: "{{ docker_service.name }}"
     state: started
@@ -20,6 +21,7 @@
   register: _plugin_state
 
 - name: install docker plugins
+  become: true
   bodsch.docker.docker_plugins:
     state: present
     plugin_source: "{{ item.source }}"

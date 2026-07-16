@@ -1,6 +1,7 @@
 ---
 
 - name: remove default packaged docker
+  become: true
   ansible.builtin.package:
     name:
       - docker
@@ -11,11 +12,13 @@
            ansible_facts.os_family | lower | replace(' ', '') == 'artixlinux')
 
 - name: install docker
+  become: true
   ansible.builtin.package:
     name: "{{ docker_packages }}"
     state: "{{ docker_state }}"
 
 - name: create docker run configuration
+  become: true
   ansible.builtin.template:
     src: "docker.j2"
     dest: "{{ docker_defaults_directory }}/docker"
@@ -28,6 +31,7 @@
     - reload docker
 
 - name: ensure containerd is running and enabled on archlinux
+  become: true
   ansible.builtin.service:
     name: containerd
     state: started
@@ -37,6 +41,7 @@
     - ansible_facts.service_mgr | lower == 'systemd'
 
 - name: ensure {{ docker_service.name }} is running
+  become: true
   ansible.builtin.service:
     name: "{{ docker_service.name }}"
     state: started
@@ -61,11 +66,13 @@
     #   # when: "'failed to start daemon' in journalctl_docker.stdout"
 
     - name: ensure {{ docker_service.name }} is stopped
+      become: true
       ansible.builtin.service:
         name: "{{ docker_service.name }}"
         state: stopped
 
     - name: re-create safe docker config file daemon.json
+      become: true
       bodsch.docker.docker_common_config:
         state: present
         diff_output: "{{ docker_config_diff }}"
@@ -87,11 +94,13 @@
         tls_key: "{{ docker_config.tls.key | default(omit) }}"
 
     - name: ensure {{ docker_service.name }} is running
+      become: true
       ansible.builtin.service:
         name: "{{ docker_service.name }}"
         state: started
 
 - name: wait for running docker
+  become: true
   ansible.builtin.wait_for:
     path: /run/docker.pid
     state: present
@@ -100,10 +109,12 @@
     msg: Timeout to find file /run/docker.pid
 
 - name: define docker_version
+  become: true
   bodsch.docker.docker_version:
   register: docker_version
 
 - name: create custom fact file
+  become: true
   bodsch.core.facts:
     name: docker
     facts:

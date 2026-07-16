@@ -38,6 +38,7 @@
     - not valid_docker_config.valid
 
 - name: install docker dependencies
+  become: true
   ansible.builtin.package:
     name: "{{ docker_dependencies }}"
     state: present
@@ -51,6 +52,7 @@
     - docker_python_packages | count > 0
   block:
     - name: create pip requirements file
+      become: true
       bodsch.core.pip_requirements:
         name: docker
         requirements: "{{ docker_python_packages }}"
@@ -63,6 +65,7 @@
         - not pip_requirements.pip.present
 
     - name: install docker python packages  # noqa no-handler
+      become: true
       ansible.builtin.pip:
         state: present
         requirements: "{{ pip_requirements.requirements_file }}"

@@ -1,6 +1,7 @@
 ---
 
 - name: add users {{ item }} to docker group
+  become: true
   ansible.builtin.user:
     name: "{{ item }}"
     groups: docker
@@ -8,6 +9,7 @@
     state: present
 
 - name: sets ACL for {{ item }} on /run/docker.sock
+  become: true
   ansible.posix.acl:
     path: /run/docker.sock
     entity: "{{ item }}"
