@@ -181,6 +181,7 @@ jobs:
           - dockerd-with-plugin
           - dockerd-with-tls
           - update-config
+          - configured-unprivileged
         collection_role:
           - docker
 
