@@ -4,6 +4,7 @@
   ansible.builtin.meta: flush_handlers
 
 - name: ensure {{ docker_service.name }} is running and enabled
+  become: true
   ansible.builtin.service:
     name: "{{ docker_service.name }}"
     state: started
@@ -20,6 +21,7 @@
     #     enabled: "{{ docker_container_prune.enable }}"
 
     - name: "{{ docker_container_prune.name }}.timer"
+      become: true
       ansible.builtin.service:
         name: "{{ docker_container_prune.name }}.timer"
         state: "{{ docker_container_prune.state }}"
@@ -36,6 +38,7 @@
     #     enabled: false
 
     - name: "{{ docker_container_prune.name }}.timer"
+      become: true
       ansible.builtin.service:
         name: "{{ docker_container_prune.name }}.timer"
         state: stopped

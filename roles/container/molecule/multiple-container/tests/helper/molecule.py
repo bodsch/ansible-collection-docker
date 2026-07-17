@@ -290,10 +290,12 @@ class VarsRenderer:
         r"""
         {{\s*
             (?:
-                template\s+"[^"]+"\s+\.
-              | define\s+"[^"]+"
-              | block\s+"[^"]+"
-              | end
+                \.\s+                    # {{ . }}        – bare context dot (e.g. "pass context")
+              | \.[A-Za-z_]\w*           # {{.field}}     – field/method access (e.g. {{.label}})
+              | template\s+"[^"]+"\s+\.  # {{ template "name" . }}
+              | define\s+"[^"]+"         # {{ define "name" }}
+              | block\s+"[^"]+"          # {{ block "name" }}
+              | end                      # {{ end }}
             )
         \s*}}
         """,
@@ -377,8 +379,10 @@ class VarsRenderer:
         if isinstance(obj, str):
             if not self._go_template.search(obj):
                 return obj
+
             if self.config.go_template_replace_entire_value:
                 return self.config.go_template_placeholder
+
             return self._go_template.sub(self.config.go_template_placeholder, obj)
 
         if isinstance(obj, AbcMapping):

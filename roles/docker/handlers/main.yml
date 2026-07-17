@@ -1,6 +1,7 @@
 ---
 
 - name: start containerd
+  become: true
   ansible.builtin.service:
     name: containerd
     state: started
@@ -18,20 +19,24 @@
         /usr/share/keyrings/docker-archive-keyring.asc
 
 - name: restart docker
+  become: true
   ansible.builtin.service:
     name: docker
     state: restarted
 
 - name: reload docker
+  become: true
   ansible.builtin.service:
     name: docker
     state: reloaded
 
 - name: validate config  # noqa no-changed-when
+  become: true
   ansible.builtin.command: |
     dockerd --validate
 
 - name: daemon reload
+  become: true
   ansible.builtin.systemd:
     daemon_reload: true
     force: true
@@ -39,12 +44,14 @@
     - ansible_facts.service_mgr == 'systemd'
 
 - name: information about config changes  # noqa no-handler
+  become: true
   ansible.builtin.debug:
     msg: "{{ _changed_docker_configuration.diff }}"
   when:
     - _changed_docker_configuration.changed
 
 - name: create daemon.json
+  become: true
   bodsch.docker.docker_common_config:
     state: present
     log_driver: "{{ docker_config.log_driver | default(omit) }}"

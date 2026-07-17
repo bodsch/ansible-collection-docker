@@ -3,6 +3,7 @@
 - name: add docker-ce apt sources
   when:
     - ansible_facts.os_family | lower == 'debian'
+  become: true
   bodsch.core.apt_sources:
     name: docker-cd
     filename: docker-ce.sources

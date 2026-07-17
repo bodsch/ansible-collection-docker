@@ -107,7 +107,7 @@ def validate_log_driver(data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         dict: Result with ``valid`` (bool) and ``msg`` (str).
     """
-    display.vv(f"validate_log_driver({data})")
+    display.vv(f"bodsch.docker.validate_log_driver({data})")
 
     log_driver: Optional[str] = data.get("log_driver")
 
