@@ -54,16 +54,19 @@
     users:
       - username: molecule
         uid: 2000
-        update_password: always
+        update_password: on_create
+        password_lock: false
         comment: Molecule Test
-        password: $y$j9T$AiFGLnWI4Vj01XkKelQqK.$y7Aq4gAzfzjGr85aocr7rlvxzQ0Mo7Wcq.hFkc4DR/D
+        password: "$5$5RPVAd$lnF2GPGVIju8XyratWgEusY19WTBLrGmesj93kzugi3"
         shell: /bin/bash
+        groups:
+          - sudo
         sudo:
           nopassword: false
           runas: "ALL"
           commands:
             - ALL
-          group: sudo
+          # group: sudo
         state: present
 
   pre_tasks:
