@@ -142,4 +142,7 @@
     - restart docker
     - information about config changes
 
+- name: flush handlers at this point to avoid double restart
+  ansible.builtin.meta: flush_handlers
+
 ...
