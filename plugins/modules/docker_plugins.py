@@ -189,6 +189,8 @@ class DockerPlugins:
     def __init__(self, module: AnsibleModule) -> None:
         """Initialize module parameters and Docker connection settings."""
         self.module = module
+        # self.module.log("DockerPlugins::__init__()")
+
         self.state = module.params.get("state")
         self.plugin_source = module.params.get("plugin_source")
         self.plugin_version = module.params.get("plugin_version")
@@ -213,6 +215,8 @@ class DockerPlugins:
                 - failed (bool)
                 - msg (str)
         """
+        # self.module.log("DockerPlugins::run()")
+
         try:
             if os.path.exists(self.docker_socket):
                 self.docker_client = docker.DockerClient(
@@ -254,6 +258,10 @@ class DockerPlugins:
         Returns:
             tuple: (installed, plugin_id, equal_version, message)
         """
+        # self.module.log("DockerPlugins::check_plugin()")
+
+        plugin: docker.Plugin = None
+
         try:
             plugins = self.docker_client.plugins.list()
         except docker.errors.APIError as e:
@@ -273,6 +281,7 @@ class DockerPlugins:
                 )
                 if version == self.plugin_version:
                     self._write_plugin_information(self.installed_plugin_data)
+
                     return (
                         True,
                         plugin.id,
@@ -291,6 +300,10 @@ class DockerPlugins:
 
     def install_plugin(self) -> Dict[str, Any]:
         """Install or re-enable a Docker plugin."""
+        # self.module.log("DockerPlugins::install_plugin()")
+
+        plugin: docker.Plugin = None
+
         try:
             plugin = self.docker_client.plugins.get(
                 f"{self.plugin_alias}:{self.plugin_version}"
@@ -314,13 +327,14 @@ class DockerPlugins:
                 )
 
         try:
-            self.module.log(
-                msg=f"Installing plugin {self.plugin_source}:{self.plugin_version}"
-            )
+            # self.module.log(
+            #     msg=f"Installing plugin {self.plugin_source}:{self.plugin_version}"
+            # )
             plugin = self.docker_client.plugins.install(
                 remote_name=f"{self.plugin_source}:{self.plugin_version}",
                 local_name=f"{self.plugin_alias}:{self.plugin_version}",
             )
+
             plugin.enable(timeout=10)
             plugin.reload()
 
@@ -331,7 +345,9 @@ class DockerPlugins:
             )
         except docker.errors.APIError as e:
             return dict(
-                changed=False, failed=True, msg=f"Plugin installation failed: {e}"
+                changed=False,
+                failed=True,
+                msg=f"Plugin installation failed: {e}"
             )
 
     def uninstall_plugin(self) -> Dict[str, Any]:
@@ -355,6 +371,8 @@ class DockerPlugins:
 
     def _write_plugin_information(self, data: Dict[str, Any]) -> None:
         """Persist plugin information locally."""
+        # self.module.log(f"DockerPlugins::_write_plugin_information(data: {data})")
+
         create_directory(self.cache_directory)
         with open(self.plugin_information_file, "w") as fp:
             json.dump(data, fp, indent=2)
@@ -385,7 +403,7 @@ def main() -> None:
     handler = DockerPlugins(module)
     result = handler.run()
 
-    module.log(msg=f"= result: {result}")
+    # module.log(msg=f"= result: {result}")
     module.exit_json(**result)
 
 

@@ -1,0 +1,15 @@
+---
+
+- name: converge
+  hosts: all
+  any_errors_fatal: false
+  vars:
+    ansible_user: molecule
+    ansible_password: molecule
+    ansible_become_password: molecule
+
+  environment:
+    NETRC: ''
+
+  roles:
+    - role: bodsch.docker.docker

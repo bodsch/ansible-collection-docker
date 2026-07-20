@@ -17,6 +17,11 @@
   tags:
     - docker_install
 
+- name: configure
+  ansible.builtin.import_tasks: configure.yml
+  tags:
+    - docker_config
+
 - name: plugins
   ansible.builtin.import_tasks: plugins.yml
   when:
@@ -24,11 +29,6 @@
     - docker_plugins | count > 0
   tags:
     - docker_plugins
-
-- name: configure
-  ansible.builtin.import_tasks: configure.yml
-  tags:
-    - docker_config
 
 - name: service
   ansible.builtin.import_tasks: service.yml
