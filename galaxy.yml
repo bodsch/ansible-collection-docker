@@ -3,7 +3,7 @@
 namespace: bodsch
 name: docker
 
-version: 1.6.0
+version: 1.7.0
 
 readme: README.md
 
@@ -23,10 +23,10 @@ tags:
   - container
 
 dependencies:
-  bodsch.core: ">=2.11.0"
-  bodsch.scm: ">=1.8.0"
+  bodsch.core: ">=2.14.0"
+  bodsch.scm: ">=1.12.0"
   community.docker: "*"
-  community.general: ">=6.5.0"
+  community.general: ">=11.0.0"
 
 repository: https://github.com/bodsch/ansible-collection-docker
 documentation: https://github.com/bodsch/ansible-collection-docker/README.md
@@ -34,19 +34,19 @@ homepage: https://github.com/bodsch/ansible-collection-docker
 issues: https://github.com/bodsch/ansible-collection-docker/issues
 
 build_ignore:
-  - galaxy.yml
-  - ".config"
-  - ".git"
-  - hooks
-  - Makefile
-  - "*/molecule"
   - "*.pyc"
   - "*.retry"
+  - "*/molecule"
   - ".ansible-lint"
+  - ".config"
   - ".editorconfig"
   - ".flake8"
+  - ".git"
+  - ".github"
   - ".gitignore"
   - ".yamllint"
-  - ".github"
-  - "tests"
-  - "plugins/filter/container_pkg"
+  - "Makefile"
+  - "galaxy.yml"
+  - "hooks"
+  - "test-requirements.txt"
+  - "tox.ini"
